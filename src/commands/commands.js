@@ -603,7 +603,7 @@ function getDialogUrl() {
   const isLocalhost = window.location.hostname === 'localhost';
   const dialogUrl = isLocalhost 
     ? 'https://localhost:3000/validation-dialog.html'
-    : 'https://nayaksubhasish.github.io/MAIL-MAGIC/validation-dialog.html';
+    : 'https://nayaksubhasish.github.io/MS-Plugin/validation-dialog.html';
   
   console.log('🔗 Dialog URL:', dialogUrl);
   console.log('🌐 Current hostname:', window.location.hostname);

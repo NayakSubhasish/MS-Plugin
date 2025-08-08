@@ -257,7 +257,7 @@ function getDialogUrl() {
   const isLocalhost = window.location.hostname === 'localhost';
   const baseUrl = isLocalhost 
     ? 'https://localhost:3000' 
-    : 'https://nayaksubhasish.github.io/MAIL-MAGIC';
+    : 'https://nayaksubhasish.github.io/MS-Plugin';
   
   return `${baseUrl}/validation-dialog.html`;
 }
