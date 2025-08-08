@@ -6,7 +6,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const webpack = require("webpack");
 
 const urlDev = "https://localhost:3000/";
-const urlProd = "https://nayaksubhasish.github.io/MAIL-MAGIC/"; // Updated to GitHub Pages URL
+const urlProd = "https://nayaksubhasish.github.io/MS-Plugin/"; // Updated to GitHub Pages URL
 
 async function getHttpsOptions() {
   const httpsOptions = await devCerts.getHttpsServerOptions();
