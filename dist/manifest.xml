@@ -96,10 +96,12 @@
               </OfficeTab>
             </ExtensionPoint>
             
-            <!-- Add Send Event Handler -->
+            <!-- Add Send Event Handler - DISABLED -->
+            <!--
             <ExtensionPoint xsi:type="Events">
               <Event Type="ItemSend" FunctionExecution="synchronous" FunctionName="validateEmail"/>
             </ExtensionPoint>
+            -->
           </DesktopFormFactor>
         </Host>
       </Hosts>

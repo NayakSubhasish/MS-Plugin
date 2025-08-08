@@ -8,102 +8,147 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 20px;
-            background: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            background: #fff4ce;
             color: #323130;
+            overflow: hidden;
         }
         
         .container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            max-width: 500px;
+            background: #fff4ce;
+            padding: 8px;
+            border: none;
+            border-radius: 0;
+            margin: 0;
+            width: 100%;
+            height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         
         .header {
             color: #d13438;
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px;
             display: flex;
             align-items: center;
+            text-align: center;
+            justify-content: center;
         }
         
         .warning-icon {
-            margin-right: 8px;
-            font-size: 20px;
+            margin-right: 4px;
+            font-size: 16px;
         }
         
         .message {
-            margin-bottom: 20px;
-            font-size: 14px;
-            line-height: 1.5;
+            margin-bottom: 8px;
+            font-size: 12px;
+            line-height: 1.3;
+            text-align: center;
+            color: #605e5c;
         }
         
         .missing-keywords {
-            background: #fff4ce;
-            border: 1px solid #ffb900;
-            border-radius: 4px;
-            padding: 12px;
-            margin: 16px 0;
+            margin: 0;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+            background: transparent;
         }
         
         .keyword-category {
-            margin-bottom: 12px;
+            margin-bottom: 4px;
+        }
+        
+        .keyword-category:last-child {
+            margin-bottom: 2px;
+        }
+        
+        .keyword-category:empty {
+            display: none;
+        }
+        
+        /* Hide empty sections to save space */
+        .keyword-suggestions:empty {
+            display: none;
+        }
+        
+        .keyword-suggestions:empty + .keyword-category {
+            margin-bottom: 0;
         }
         
         .category-title {
-            font-weight: 600;
-            color: #8a8886;
-            font-size: 12px;
+            font-weight: 700;
+            color: #323130;
+            font-size: 11px;
             text-transform: uppercase;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
+            letter-spacing: 0.2px;
+            border-bottom: 1px solid #ffb900;
+            padding-bottom: 1px;
+            display: inline-block;
         }
         
         .keyword-suggestions {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 2px;
+            margin-top: 1px;
         }
         
         .keyword-chip {
-            background: #f3f2f1;
-            border: 1px solid #d1d1d1;
-            border-radius: 12px;
-            padding: 4px 8px;
-            font-size: 12px;
+            background: #ffffff;
+            border: 1px solid #e1dfdd;
+            border-radius: 8px;
+            padding: 3px 6px;
+            font-size: 10px;
             cursor: pointer;
             transition: all 0.2s ease;
+            font-weight: 500;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            line-height: 1.1;
         }
         
         .keyword-chip:hover {
-            background: #e1dfdd;
-            border-color: #8a8886;
+            background: #f8f8f8;
+            border-color: #0078d4;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
         
         .keyword-chip.selected {
             background: #0078d4;
             color: white;
             border-color: #0078d4;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
         }
         
         .button-container {
             display: flex;
-            gap: 12px;
-            margin-top: 20px;
-            justify-content: flex-end;
+            gap: 4px;
+            margin-top: 6px;
+            justify-content: center;
+            flex-shrink: 0;
+            padding-top: 2px;
         }
         
         .btn {
-            padding: 8px 16px;
+            padding: 5px 10px;
             border: none;
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 11px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
-            min-width: 80px;
+            min-width: 60px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            line-height: 1;
         }
         
         .btn-primary {
@@ -113,16 +158,20 @@
         
         .btn-primary:hover {
             background: #106ebe;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
         }
         
         .btn-secondary {
-            background: #f3f2f1;
+            background: #ffffff;
             color: #323130;
-            border: 1px solid #d1d1d1;
+            border: 2px solid #d1d1d1;
         }
         
         .btn-secondary:hover {
-            background: #e1dfdd;
+            background: #f8f8f8;
+            border-color: #8a8886;
+            transform: translateY(-1px);
         }
         
         .btn-warning {
@@ -132,19 +181,47 @@
         
         .btn-warning:hover {
             background: #a4262c;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(209, 52, 56, 0.3);
         }
         
         .selected-count {
-            font-size: 12px;
+            font-size: 10px;
             color: #605e5c;
-            margin-top: 8px;
+            margin-top: 3px;
+            margin-bottom: 2px;
+            text-align: center;
+            font-weight: 500;
+            padding: 2px 4px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 3px;
+            line-height: 1.2;
         }
         
         .loading {
             display: none;
             text-align: center;
-            padding: 20px;
+            padding: 10px 6px;
             color: #605e5c;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .loading::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border: 1px solid #f3f3f3;
+            border-top: 1px solid #0078d4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 2px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -160,7 +237,13 @@
         </div>
         
         <div id="missing-keywords" class="missing-keywords">
-            <!-- Keywords will be populated by JavaScript -->
+            <!-- Fallback content in case JavaScript fails -->
+            <div class="keyword-category">
+                <div class="category-title">LOADING...</div>
+                <div class="keyword-suggestions">
+                    <div class="keyword-chip">Please wait</div>
+                </div>
+            </div>
         </div>
         
         <div class="selected-count" id="selected-count">
@@ -183,44 +266,41 @@
         let missingKeywords = [];
         let selectedKeywords = [];
         
-        // Initialize Office
+        // Initialize Office and show test data immediately
         Office.onReady(() => {
             console.log('Validation dialog ready');
             
-            // Add test data if no data is received within 2 seconds
-            setTimeout(() => {
-                if (missingKeywords.length === 0) {
-                    console.log('⚠️ No keywords data received, using test data');
-                    missingKeywords = [
-                        {
-                            category: "Greeting",
-                            suggestions: ["Dear", "Hello", "Good morning", "Hi there"],
-                            key: "greeting"
-                        },
-                        {
-                            category: "Meeting Structure",
-                            suggestions: ["Agenda", "Meeting purpose", "Objectives", "Topics to discuss"],
-                            key: "agenda"
-                        },
-                        {
-                            category: "Timeline",
-                            suggestions: ["Date", "Time", "Duration", "Schedule"],
-                            key: "timeline"
-                        },
-                        {
-                            category: "Action Items",
-                            suggestions: ["Next steps", "Follow-up", "Deliverables", "Assignments"],
-                            key: "actionItems"
-                        },
-                        {
-                            category: "Participants",
-                            suggestions: ["Attendees", "Team members", "Stakeholders", "Required participants"],
-                            key: "participants"
-                        }
-                    ];
-                    displayMissingKeywords();
+            // Show test data immediately for debugging
+            console.log('📱 Loading test data immediately');
+            missingKeywords = [
+                {
+                    category: "GREETING",
+                    suggestions: ["Dear", "Hello", "Hi"],
+                    key: "greeting"
+                },
+                {
+                    category: "ACTION ITEMS", 
+                    suggestions: ["next steps", "follow-up", "action items"],
+                    key: "actionItems"
+                },
+                {
+                    category: "TIMELINE",
+                    suggestions: ["deadline", "timeline", "completion date"],
+                    key: "timeline"
+                },
+                {
+                    category: "PARTICIPANTS",
+                    suggestions: ["attendees", "participants", "invitees"],
+                    key: "participants"
                 }
-            }, 2000);
+            ];
+            displayMissingKeywords();
+            
+            // Still listen for real data that might come later
+            setTimeout(() => {
+                console.log('⚠️ Checking if real data was received...');
+                console.log('📊 Current missingKeywords length:', missingKeywords.length);
+            }, 3000);
         });
         
         // Listen for messages from parent
