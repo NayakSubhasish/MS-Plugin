@@ -1,0 +1,19 @@
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" ...>
+  <Id>your-guid-here</Id>
+  <DisplayName>Email Validator</DisplayName>
+  <Hosts>
+    <Host Name="Mailbox"/>
+  </Hosts>
+  <Requirements>
+    <Sets DefaultMinVersion="1.8">
+      <Set Name="Mailbox"/>
+    </Sets>
+  </Requirements>
+  <ExtendedPermissions>
+    <Permission>ReadWriteItem</Permission>
+  </ExtendedPermissions>
+  <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read"/>
+  <LaunchEvents>
+    <LaunchEvent Type="OnMessageSend" FunctionName="validateEmail"/>
+  </LaunchEvents>
+</OfficeApp>

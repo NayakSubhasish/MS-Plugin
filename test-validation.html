@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Email Validation Test</title>
+    <meta charset="utf-8" />
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background: #f9f9f9;
+            color: #323130;
+        }
+        
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 800px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #d1d1d1;
+            border-radius: 4px;
+        }
+        
+        .test-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #0078d4;
+        }
+        
+        .email-example {
+            background: #f3f2f1;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        
+        .missing-info {
+            background: #fff4ce;
+            border: 1px solid #ffb900;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .success-info {
+            background: #dff6dd;
+            border: 1px solid #107c10;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+            background: #0078d4;
+            color: white;
+        }
+        
+        .btn:hover {
+            background: #106ebe;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Email Validation Test Guide</h1>
+        
+        <div class="test-section">
+            <div class="test-title">✅ Test 1: Complete Email (Should Pass)</div>
+            <div class="email-example">Dear John,
+
+I hope this email finds you well. I wanted to discuss our upcoming meeting agenda.
+
+Topics to discuss:
+- Project timeline and deadlines
+- Action items for next steps
+- Participants and attendees
+
+Please let me know if you have any questions.
+
+Best regards,
+Sarah</div>
+            <div class="success-info">
+                ✅ This email should PASS validation - contains all required elements:
+                <ul>
+                    <li>Greeting: "Dear"</li>
+                    <li>Meeting Structure: "agenda", "topics"</li>
+                    <li>Timeline: "deadlines"</li>
+                    <li>Action Items: "next steps"</li>
+                    <li>Participants: "attendees"</li>
+                    <li>Closing: "Best regards"</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">❌ Test 2: Incomplete Email (Should Trigger Validation)</div>
+            <div class="email-example">Hi,
+
+Meeting tomorrow at 2pm.
+
+Thanks</div>
+            <div class="missing-info">
+                ❌ This email should FAIL validation - missing:
+                <ul>
+                    <li>❌ Proper Greeting (needs "Dear", "Hello", etc.)</li>
+                    <li>❌ Meeting Structure (needs "agenda", "topics")</li>
+                    <li>❌ Timeline (needs "deadline", "schedule")</li>
+                    <li>❌ Action Items (needs "next steps", "follow up")</li>
+                    <li>❌ Participants (needs "attendees", "participants")</li>
+                    <li>❌ Proper Closing (needs "regards", "thank you")</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">⚠️ Test 3: Partially Complete Email</div>
+            <div class="email-example">Dear Team,
+
+I wanted to follow up on our discussion.
+
+Next steps:
+- Review the proposal
+- Schedule a meeting
+
+Thank you,
+Manager</div>
+            <div class="missing-info">
+                ⚠️ This email should trigger validation - missing:
+                <ul>
+                    <li>❌ Meeting Structure (needs "agenda", "topics")</li>
+                    <li>❌ Timeline (needs "deadline", "schedule")</li>
+                    <li>❌ Participants (needs "attendees", "participants")</li>
+                </ul>
+                ✅ But contains:
+                <ul>
+                    <li>✅ Greeting: "Dear"</li>
+                    <li>✅ Action Items: "Next steps"</li>
+                    <li>✅ Closing: "Thank you"</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🧪 How to Test in Outlook</div>
+            <ol>
+                <li><strong>Install the Add-in:</strong> Load the manifest.xml in Outlook</li>
+                <li><strong>Compose Email:</strong> Create a new email with incomplete content</li>
+                <li><strong>Click Send:</strong> The validation should trigger automatically</li>
+                <li><strong>Check Console:</strong> Open browser dev tools to see validation logs</li>
+                <li><strong>Test Options:</strong>
+                    <ul>
+                        <li>"Send Anyway" - Should bypass validation</li>
+                        <li>"Add Keywords" - Should enhance email with AI</li>
+                        <li>"Cancel" - Should return to editing</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🔍 Debug Information</div>
+            <p>When testing, check the browser console for these log messages:</p>
+            <ul>
+                <li><code>🚀 Email validation triggered - OnMessageSend event fired</code></li>
+                <li><code>📧 Email body length: XXX</code></li>
+                <li><code>🔍 Missing keywords found: X</code></li>
+                <li><code>❌ Missing categories: [list]</code></li>
+                <li><code>✅ All keywords present, allowing send</code></li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🎯 Expected Workflow</div>
+            <ol>
+                <li>User clicks Send → Validation triggers</li>
+                <li>System checks email for 6 keyword categories</li>
+                <li>If missing keywords → Shows popup dialog</li>
+                <li>User chooses: Send Anyway / Add Keywords / Cancel</li>
+                <li>If "Add Keywords" → AI enhances email via bot@work API</li>
+                <li>Enhanced email is sent with proper elements</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html> 
