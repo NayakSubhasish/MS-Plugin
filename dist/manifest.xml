@@ -6,7 +6,7 @@
            xsi:type="MailApp">
   <Id>430cc362-4e61-4e54-a55b-2725cf292494</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>FlatWorldSolutions PVT.LTD.(Subhasish)</ProviderName>
+  <ProviderName>FlatWorldSolutions PVT.LTD.(Subhasish.N)</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Mail Magic"/>
   <Description DefaultValue="AI-powered email assistant for sales professionals"/>
@@ -27,7 +27,7 @@
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://nayaksubhasish.github.io/MS-Plugin/taskpane.html"/>
+        <SourceLocation DefaultValue="https://nayaksubhasish.github.io/MS-Plugin"/>
         <RequestedHeight>250</RequestedHeight>
       </DesktopSettings>
     </Form>
@@ -114,7 +114,7 @@
         </bt:Images>
         <bt:Urls>
           <bt:Url id="Commands.Url" DefaultValue="https://nayaksubhasish.github.io/MS-Plugin/commands.html"/>
-          <bt:Url id="Taskpane.Url" DefaultValue="https://nayaksubhasish.github.io/MS-Plugin/taskpane.html"/>
+          <bt:Url id="Taskpane.Url" DefaultValue="https://nayaksubhasish.github.io/MS-Plugin"/>
         </bt:Urls>
         <bt:ShortStrings>
           <bt:String id="GroupLabel" DefaultValue="Mail Magic"/>

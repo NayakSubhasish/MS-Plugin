@@ -53,9 +53,9 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
     return {
       chooseATask: "emailWrite",
       description: descriptionMatch ? descriptionMatch[1].trim() : (apiDescription != null ? apiDescription : cleanPrompt),
-      additionalInstructions: additionalInstructions || "Write a professional email that matches the specified tone and perspective exactly. Use 'we', 'our', 'us' for organization perspective and 'I', 'my', 'me' for individual perspective.",
+      //additionalInstructions: additionalInstructions || "Write a professional email that matches the specified tone and perspective exactly. Use 'we', 'our', 'us' for organization perspective and 'I', 'my', 'me' for individual perspective.",
       tone: tone, // Always use the dynamic tone parameter
-      pointOfView: pointOfView === "individualPerspective" ? "firstPerson" : "organizationPerspective" // Map to API expected values
+      pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective" // Map to API expected values
     };
   }
 
@@ -64,9 +64,9 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
     return {
       chooseATask: "emailResponse",
       emailContent: apiEmailContent != null ? apiEmailContent : cleanPrompt,
-      additionalInstructions: additionalInstructions || "Provide a relevant and contextual response that matches the specified tone and perspective. Use 'we', 'our', 'us' for organization perspective and 'I', 'my', 'me' for individual perspective.",
+     // additionalInstructions: additionalInstructions || "Provide a relevant and contextual response that matches the specified tone and perspective. Use 'we', 'our', 'us' for organization perspective and 'I', 'my', 'me' for individual perspective.",
       tone,
-      pointOfView: pointOfView === "individualPerspective" ? "firstPerson" : "organizationPerspective"
+      pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective"
     };
   }
 
@@ -75,9 +75,9 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
     return {
       chooseATask: "emailWrite", // Use emailWrite for chat as it's more flexible
       description: cleanPrompt,
-      additionalInstructions: additionalInstructions || "Provide a helpful and conversational response. Use 'we', 'our', 'us' for organization perspective and 'I', 'my', 'me' for individual perspective.",
+     // additionalInstructions: additionalInstructions || "Provide a helpful and conversational response. Use 'we', 'our', 'us' for organization perspective and 'I', 'my', 'me' for individual perspective.",
       tone,
-      pointOfView: pointOfView === "individualPerspective" ? "firstPerson" : "organizationPerspective"
+      pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective"
     };
   }
 
@@ -85,9 +85,9 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
   return {
     chooseATask: "emailWrite",
     description: apiDescription != null ? apiDescription : cleanPrompt,
-    additionalInstructions: additionalInstructions || "Write a professional email that matches the specified tone and perspective. Use 'we', 'our', 'us' for organization perspective and 'I', 'my', 'me' for individual perspective.",
+   // additionalInstructions: additionalInstructions || "Write a professional email that matches the specified tone and perspective. Use 'we', 'our', 'us' for organization perspective and 'I', 'my', 'me' for individual perspective.",
     tone,
-    pointOfView: pointOfView === "individualPerspective" ? "firstPerson" : "organizationPerspective"
+    pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective"
   };
 };
 
