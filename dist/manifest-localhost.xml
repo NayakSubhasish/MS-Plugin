@@ -10,8 +10,8 @@
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Mail Magic (Local Dev)"/>
   <Description DefaultValue="AI-powered email assistant - Local Development"/>
-  <IconUrl DefaultValue="https://nayaksubhasish.github.io/MAIL-MAGIC/assets/logo.png?v=1"/>
-  <HighResolutionIconUrl DefaultValue="https://nayaksubhasish.github.io/MAIL-MAGIC/assets/logo.png?v=1"/>
+  <IconUrl DefaultValue="https://nayaksubhasish.github.io/MS-Plugin/assets/logo.png?v=1"/>
+  <HighResolutionIconUrl DefaultValue="https://nayaksubhasish.github.io/MS-Plugin/assets/logo.png?v=1"/>
   
   <SupportUrl DefaultValue="https://www.flatworldsolutions.com/help"/>
   <AppDomains>
@@ -28,7 +28,7 @@
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://nayaksubhasish.github.io/MAIL-MAGIC/taskpane.html"/>
+        <SourceLocation DefaultValue="https://nayaksubhasish.github.io/MS-Plugin/taskpane.html"/>
         <RequestedHeight>250</RequestedHeight>
       </DesktopSettings>
     </Form>
@@ -109,13 +109,13 @@
 
       <Resources>
         <bt:Images>
-          <bt:Image id="Icon.16x16" DefaultValue="https://nayaksubhasish.github.io/MAIL-MAGIC/assets/logo.png?v=1"/>
-          <bt:Image id="Icon.32x32" DefaultValue="https://nayaksubhasish.github.io/MAIL-MAGIC/assets/logo.png?v=1"/>
-          <bt:Image id="Icon.80x80" DefaultValue="https://nayaksubhasish.github.io/MAIL-MAGIC/assets/logo.png?v=1"/>
+          <bt:Image id="Icon.16x16" DefaultValue="https://nayaksubhasish.github.io/MS-Plugin/assets/logo.png?v=1"/>
+          <bt:Image id="Icon.32x32" DefaultValue="https://nayaksubhasish.github.io/MS-Plugin/assets/logo.png?v=1"/>
+          <bt:Image id="Icon.80x80" DefaultValue="https://nayaksubhasish.github.io/MS-Plugin/assets/logo.png?v=1"/>
         </bt:Images>
         <bt:Urls>
-          <bt:Url id="Commands.Url" DefaultValue="https://nayaksubhasish.github.io/MAIL-MAGIC/commands.html"/>
-          <bt:Url id="Taskpane.Url" DefaultValue="https://nayaksubhasish.github.io/MAIL-MAGIC/taskpane.html"/>
+          <bt:Url id="Commands.Url" DefaultValue="https://nayaksubhasish.github.io/MS-Plugin/commands.html"/>
+          <bt:Url id="Taskpane.Url" DefaultValue="https://nayaksubhasish.github.io/MS-Plugin/taskpane.html"/>
         </bt:Urls>
         <bt:ShortStrings>
           <bt:String id="GroupLabel" DefaultValue="Mail Magic"/>

@@ -6,7 +6,7 @@
            xsi:type="MailApp">
   <Id>430cc362-4e61-4e54-a55b-2725cf292494</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>FlatWorldSolutions PVT.LTD.(Subhasish.N)</ProviderName>
+  <ProviderName>FlatWorldSolutions PVT.LTD.(Subhasish)</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Mail Magic"/>
   <Description DefaultValue="AI-powered email assistant for sales professionals"/>
@@ -50,7 +50,6 @@
         <Host xsi:type="MailHost">
           <DesktopFormFactor>
             <FunctionFile resid="Commands.Url"/>
-
             <ExtensionPoint xsi:type="MessageReadCommandSurface">
               <OfficeTab id="TabDefault">
                 <Group id="msgReadGroup">
@@ -73,6 +72,7 @@
                 </Group>
               </OfficeTab>
             </ExtensionPoint>
+
             <ExtensionPoint xsi:type="MessageComposeCommandSurface">
               <OfficeTab id="TabDefault">
                 <Group id="msgComposeGroup">
@@ -95,8 +95,8 @@
                 </Group>
               </OfficeTab>
             </ExtensionPoint>
-            
-            <!-- Add Send Event Handler - DISABLED -->
+
+            <!-- Optional: Enable Send Event Handler -->
             <!--
             <ExtensionPoint xsi:type="Events">
               <Event Type="ItemSend" FunctionExecution="synchronous" FunctionName="validateEmail"/>
