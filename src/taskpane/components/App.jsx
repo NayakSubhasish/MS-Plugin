@@ -20,25 +20,81 @@ const useStyles = makeStyles({
       display: "none",
     },
   },
-  // Loading spinner styles
+  // Loading spinner styles - dynamic rotating loader
   spinner: {
-    display: "inline-block",
-    width: "40px",
-    height: "40px",
-    border: "3px solid rgba(0, 120, 212, 0.3)",
-    borderRadius: "50%",
-    borderTopColor: "#0078d4",
-    animation: "$spin 1s ease-in-out infinite",
+    position: "relative",
+    width: "80px",
+    height: "80px",
   },
-  "@keyframes spin": {
-    to: {
+  spinnerRing1: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    borderRadius: "50%",
+    border: "3px solid transparent",
+    borderTop: "3px solid #0078d4",
+    borderRight: "3px solid rgba(0, 120, 212, 0.3)",
+    animation: "$rotate 1.5s linear infinite",
+  },
+  spinnerRing2: {
+    position: "absolute",
+    width: "70%",
+    height: "70%",
+    top: "15%",
+    left: "15%",
+    borderRadius: "50%",
+    border: "2px solid transparent",
+    borderTop: "2px solid #106ebe",
+    borderLeft: "2px solid rgba(16, 110, 190, 0.3)",
+    animation: "$rotate 1s linear infinite reverse",
+  },
+  spinnerRing3: {
+    position: "absolute",
+    width: "40%",
+    height: "40%",
+    top: "30%",
+    left: "30%",
+    borderRadius: "50%",
+    border: "2px solid transparent",
+    borderBottom: "2px solid #005a9e",
+    borderRight: "2px solid rgba(0, 90, 158, 0.3)",
+    animation: "$rotate 0.8s linear infinite",
+  },
+  spinnerCenter: {
+    position: "absolute",
+    width: "20%",
+    height: "20%",
+    top: "40%",
+    left: "40%",
+    borderRadius: "50%",
+    backgroundColor: "#0078d4",
+    animation: "$pulse 1.2s ease-in-out infinite",
+  },
+  "@keyframes rotate": {
+    "0%": {
+      transform: "rotate(0deg)",
+    },
+    "100%": {
       transform: "rotate(360deg)",
+    },
+  },
+  "@keyframes pulse": {
+    "0%, 100%": {
+      transform: "scale(1)",
+      opacity: "1",
+    },
+    "50%": {
+      transform: "scale(1.2)",
+      opacity: "0.7",
     },
   },
   // Global spin animation for button spinners
   "@global": {
     "@keyframes spin": {
-      to: {
+      "0%": {
+        transform: "rotate(0deg)",
+      },
+      "100%": {
         transform: "rotate(360deg)",
       },
     },
@@ -915,8 +971,10 @@ Enhanced email:`;
                     height: '16px',
                     border: '2px solid rgba(255,255,255,0.3)',
                     borderRadius: '50%',
-                    borderTopColor: '#ffffff',
-                    animation: 'spin 1s ease-in-out infinite'
+                    borderTop: '2px solid #ffffff',
+                    animation: 'spin 1s linear infinite',
+                    transformOrigin: 'center',
+                    willChange: 'transform'
                   }}></div>
                   <span>Generating...</span>
                 </div>
@@ -1029,8 +1087,8 @@ Enhanced email:`;
                     height: '16px',
                     border: '2px solid rgba(255,255,255,0.3)',
                     borderRadius: '50%',
-                    borderTopColor: '#ffffff',
-                    animation: 'spin 1s ease-in-out infinite'
+                    borderTop: '2px solid #ffffff',
+                    animation: 'spin 1s linear infinite'
                   }}></div>
                   <span>Generating...</span>
                 </div>
@@ -1092,7 +1150,48 @@ Enhanced email:`;
         <div className={styles.contentArea}>
           {loading ? (
             <div className={styles.loadingContainer}>
-              <div className={styles.spinner}></div>
+              <div style={{
+                position: 'relative',
+                width: '60px',
+                height: '60px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  border: '4px solid rgba(0, 120, 212, 0.2)',
+                  borderTop: '4px solid #0078d4',
+                  animation: 'spin 1s linear infinite',
+                  transformOrigin: 'center',
+                  willChange: 'transform'
+                }}></div>
+                <div style={{
+                  position: 'absolute',
+                  width: '70%',
+                  height: '70%',
+                  borderRadius: '50%',
+                  border: '3px solid rgba(0, 120, 212, 0.15)',
+                  borderRight: '3px solid #106ebe',
+                  animation: 'spin 0.8s linear infinite reverse',
+                  transformOrigin: 'center',
+                  willChange: 'transform'
+                }}></div>
+                <div style={{
+                  position: 'absolute',
+                  width: '40%',
+                  height: '40%',
+                  borderRadius: '50%',
+                  border: '2px solid rgba(0, 120, 212, 0.1)',
+                  borderBottom: '2px solid #005a9e',
+                  animation: 'spin 1.2s linear infinite',
+                  transformOrigin: 'center',
+                  willChange: 'transform'
+                }}></div>
+              </div>
               <div className={styles.loadingText}>
                 {generatedContent === "Generating..." ? "Generating your content..." :
                  generatedContent === "Generating email..." ? "Creating your email..." :
@@ -1148,8 +1247,8 @@ Enhanced email:`;
                     height: '16px',
                     border: '2px solid rgba(255,255,255,0.3)',
                     borderRadius: '50%',
-                    borderTopColor: '#ffffff',
-                    animation: 'spin 1s ease-in-out infinite'
+                    borderTop: '2px solid #ffffff',
+                    animation: 'spin 1s linear infinite'
                   }}></div>
                   <span>Enhancing...</span>
                 </div>
