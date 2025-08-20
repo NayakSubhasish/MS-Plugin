@@ -322,10 +322,33 @@ const App = (props) => {
       }
     });
   };
+
+  // Fire-and-forget usage logger for plugin actions
+  const logPluginUsage = (action) => {
+    try {
+      const userEmail = (window.Office && Office.context && Office.context.mailbox && Office.context.mailbox.userProfile && Office.context.mailbox.userProfile.emailAddress)
+        ? Office.context.mailbox.userProfile.emailAddress
+        : "unknown@unknown.com";
+      const url = `https://corporate-crm-data-enrichment-azbqwqgd6a-uc.a.run.app/DataEnrichment/SaveOutlookPluginLogsToDatabase?Action=${encodeURIComponent(action)}&UserEmail=${encodeURIComponent(userEmail)}`;
+      console.log(`[PluginLog] Sending usage log`, { action, userEmail, url });
+      // Use no-cors to avoid blocking on CORS; this is fire-and-forget
+      fetch(url, { method: 'GET', mode: 'no-cors' })
+        .then(() => {
+          console.log(`[PluginLog] Usage log sent (opaque/no-cors)`, { action, userEmail });
+        })
+        .catch((err) => {
+          console.warn(`[PluginLog] Usage log failed`, { action, userEmail, error: String(err) });
+        });
+    } catch (err) {
+      console.warn(`[PluginLog] Usage log threw before fetch`, { action, error: String(err) });
+    }
+  };
   
   // getEmailBody= () => "I am a sales manager and I am sending this email to you";
   // Helper to call Gemini API with a custom prompt
   const callGemini = async (promptTemplate) => {
+    // Usage tracking for Suggest Reply action
+    logPluginUsage('Suggest Reply');
     setLoading(true);
     setGeneratedContent("Generating...");
     try {
@@ -726,6 +749,8 @@ Enhanced email:`;
       setGeneratedContent("Please enter a description for the email.");
       return;
     }
+    // Usage tracking for Write Email action
+    logPluginUsage('Write Email');
     
     const prompt = customPrompts.writeEmail
       .replace("{description}", emailForm.description)
