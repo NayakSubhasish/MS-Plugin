@@ -4,6 +4,93 @@ import PromptConfig from "./PromptConfig";
 import { Button, makeStyles, tokens, FluentProvider, teamsLightTheme, teamsDarkTheme, Switch, Label, Tab, TabList } from "@fluentui/react-components";
 import { getSuggestedReply } from "../botAtWorkApi";
 
+// Minimal Markdown → HTML converter for lists and tables
+function convertMarkdownToHtml(markdown) {
+  if (!markdown) return "";
+  // If content already contains HTML tags, assume it's HTML
+  if (/<\w+[^>]*>/.test(markdown)) return markdown;
+
+  const lines = markdown.split(/\r?\n/);
+  const html = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Table detection: at least 2 rows with pipes and a separator row ---
+    if (line.includes('|')) {
+      const header = line;
+      const sep = lines[i + 1] || '';
+      if (/^\s*\|?\s*:?[-\s|]+:?\s*\|?\s*$/.test(sep)) {
+        const rows = [];
+        i += 2;
+        while (i < lines.length && lines[i].includes('|')) {
+          rows.push(lines[i]);
+          i++;
+        }
+        const headerCells = header.split('|').map(c => c.trim()).filter(Boolean);
+        const rowCells = rows.map(r => r.split('|').map(c => c.trim()).filter(Boolean));
+        const thead = `<thead><tr>${headerCells.map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>`;
+        const tbody = `<tbody>${rowCells.map(r => `<tr>${r.map(c => `<td>${escapeHtml(c)}</td>`).join('')}</tr>`).join('')}</tbody>`;
+        html.push(`<table>${thead}${tbody}</table>`);
+        continue;
+      }
+    }
+
+    // Unordered list
+    if (/^\s*[-*]\s+/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
+        items.push(lines[i].replace(/^\s*[-*]\s+/, ''));
+        i++;
+      }
+      html.push(`<ul>${items.map(item => `<li>${inlineMd(item)}</li>`).join('')}</ul>`);
+      continue;
+    }
+
+    // Ordered list
+    if (/^\s*\d+\.\s+/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
+        items.push(lines[i].replace(/^\s*\d+\.\s+/, ''));
+        i++;
+      }
+      html.push(`<ol>${items.map(item => `<li>${inlineMd(item)}</li>`).join('')}</ol>`);
+      continue;
+    }
+
+    // Paragraphs (preserve blank lines)
+    if (line.trim() === '') {
+      html.push('');
+      i++;
+      continue;
+    }
+    html.push(`<p>${inlineMd(line)}</p>`);
+    i++;
+  }
+
+  // Linkify plain URLs
+  const joined = html.join('\n')
+    .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+  return joined;
+
+  function inlineMd(text) {
+    // Escape then restore basic markdown formatting
+    let t = escapeHtml(text);
+    t = t.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    t = t.replace(/\*(.*?)\*/g, '<i>$1</i>');
+    return t;
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+}
+
 const useStyles = makeStyles({
   root: {
     height: "100vh",
@@ -167,6 +254,26 @@ const useStyles = makeStyles({
     },
     "&:hover": {
       boxShadow: "0 8px 30px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.15)",
+    },
+    // Markdown rendering tweaks
+    "& table": {
+      width: "100%",
+      borderCollapse: "collapse",
+      margin: "8px 0",
+    },
+    "& th, & td": {
+      border: "1px solid #d1d1d1",
+      padding: "6px 8px",
+      textAlign: "left",
+      verticalAlign: "top",
+    },
+    "& thead th": {
+      background: "#f3f2f1",
+      fontWeight: 600,
+    },
+    "& ul, & ol": {
+      margin: "6px 0",
+      paddingLeft: "18px",
     },
   },
   gridButton: {
@@ -352,8 +459,10 @@ const App = (props) => {
     setLoading(true);
     setGeneratedContent("Generating...");
     try {
-      const emailBody = await getEmailBody();
-      const conversationThread = await getConversationThread();
+      const [emailBody, conversationThread] = await Promise.all([
+        getEmailBody(),
+        getConversationThread()
+      ]);
       
       // Include conversation thread context in the prompt
       const contextWithThread = `Conversation Context:\n${conversationThread}\n\nCurrent Email:\n${emailBody}`;
@@ -362,18 +471,9 @@ const App = (props) => {
         .replace("{tone}", emailForm.tone)
         .replace("{pointOfView}", emailForm.pointOfView);
       
-      console.log("prompt", prompt);
+      // Removed prompt logging to avoid blocking main thread
       
-      // Monitor for retry attempts (silent)
-      let retryCount = 0;
-      const originalLog = console.log;
-      console.log = (...args) => {
-        if (args[0] && args[0].includes && args[0].includes('BotAtWork API attempt')) {
-          retryCount++;
-          // Keep the loading message clean - no retry status shown to user
-        }
-        originalLog.apply(console, args);
-      };
+      // Removed console.log monkey-patching for performance
       
       // Use emailResponse for reply suggestions with proper structured parameters
       const apiParams = {
@@ -384,10 +484,9 @@ const App = (props) => {
         additionalInstructions: ""
       };
       
-      const reply = await getSuggestedReply(contextWithThread, 3, apiParams);
+      const reply = await getSuggestedReply(contextWithThread, 2, apiParams);
       
-      // Restore original console.log
-      console.log = originalLog;
+      // No console.log monkey-patching
       
       setGeneratedContent(reply);
     } catch (e) {
@@ -543,8 +642,10 @@ const App = (props) => {
     setGeneratedContent("Enhancing email with missing keywords...");
     
     try {
-      const currentBody = await getEmailBody();
-      const emailSubject = await getEmailSubject();
+      const [currentBody, emailSubject] = await Promise.all([
+        getEmailBody(),
+        getEmailSubject()
+      ]);
       
       // Get all missing keywords and their categories
       const missingElements = missingKeywords.map(item => ({
@@ -677,16 +778,7 @@ Enhanced email:`;
         prompt = context ? `Previous conversation:\n${context}\n\nUser's new question: ${userMessage}\n\nPlease provide a helpful response.` : `User question: ${userMessage}\n\nPlease provide a helpful response.`;
       }
       
-      // Monitor for retry attempts (silent)
-      let retryCount = 0;
-      const originalLog = console.log;
-      console.log = (...args) => {
-        if (args[0] && args[0].includes && args[0].includes('BotAtWork API attempt')) {
-          retryCount++;
-          // Keep the loading message clean - no retry status shown to user
-        }
-        originalLog.apply(console, args);
-      };
+      // Removed console.log monkey-patching for performance
       
       // Use chat task type for conversational interactions
       const contextualPrompt = `${prompt}`;
@@ -699,10 +791,9 @@ Enhanced email:`;
         additionalInstructions: "Provide a helpful and conversational response to the user's question or request."
       };
       
-      const reply = await getSuggestedReply(contextualPrompt, 3, apiParams);
+      const reply = await getSuggestedReply(contextualPrompt, 2, apiParams);
       
-      // Restore original console.log
-      console.log = originalLog;
+      // No console.log monkey-patching
       
       // Add AI response to chat history
       const newAIMessage = { type: 'ai', content: reply };
@@ -762,16 +853,7 @@ Enhanced email:`;
     setGeneratedContent("Generating email...");
     
     try {
-      // Monitor for retry attempts (silent)
-      let retryCount = 0;
-      const originalLog = console.log;
-      console.log = (...args) => {
-        if (args[0] && args[0].includes && args[0].includes('BotAtWork API attempt')) {
-          retryCount++;
-          // Keep the loading message clean - no retry status shown to user
-        }
-        originalLog.apply(console, args);
-      };
+      // Removed console.log monkey-patching for performance
       
       // Use emailWrite for creating new emails
       const apiParams = {
@@ -782,10 +864,9 @@ Enhanced email:`;
         additionalInstructions: ""
       };
       
-      const reply = await getSuggestedReply(prompt, 3, apiParams);
+      const reply = await getSuggestedReply(prompt, 2, apiParams);
       
-      // Restore original console.log
-      console.log = originalLog;
+      // No console.log monkey-patching
       
       setGeneratedContent(reply);
       setLoading(false);
@@ -1229,11 +1310,7 @@ Enhanced email:`;
             <div
               dangerouslySetInnerHTML={{
                 __html: generatedContent
-                  ? generatedContent
-                      .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>') // links clickable
-                      .replace(/\n/g, '<br>') // preserve line breaks
-                      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') // bold for **text**
-                      .replace(/\*(.*?)\*/g, '<i>$1</i>') // italics for *text*
+                  ? convertMarkdownToHtml(generatedContent)
                   : '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #605e5c; font-style: italic; text-align: center; padding: 30px;"><div><div style="font-size: 16px; margin-bottom: 6px;">✨ Your generated content will appear here</div><div style="font-size: 12px; opacity: 0.8;">Click a button above to get started</div></div></div>'
               }}
             />
@@ -1387,4 +1464,4 @@ App.propTypes = {
 
 export default App;
 
-console.log("Arnav and Akshay");
+console.log("Arnav and Akshay, ALok");
