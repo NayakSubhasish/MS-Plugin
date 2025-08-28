@@ -3,6 +3,20 @@ const BOTATWORK_API_KEY = "e80f5458c550f5b85ef56175b789468a";
 const BOTATWORK_API_URL = "https://api.botatwork.com/trigger-task/b6f44edd-8140-4084-881e-2c11c403c082";
 const DEBUG_LOGS_ENABLED = false; // Toggle verbose logs
 
+// Helper function to get logged-in user's email
+const getLoggedInUserEmail = () => {
+  try {
+    if (window.Office && Office.context && Office.context.mailbox && Office.context.mailbox.userProfile && Office.context.mailbox.userProfile.emailAddress) {
+      return Office.context.mailbox.userProfile.emailAddress;
+    }
+  } catch (error) {
+    if (DEBUG_LOGS_ENABLED) {
+      console.warn('Failed to get user email:', error);
+    }
+  }
+  return "unknown@unknown.com";
+};
+
 // Normalize and clamp prompt length to reduce payload and latency
 const clampText = (text, maxLen = 4000) => {
   if (!text) return "";
@@ -50,9 +64,14 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
     emailContent: apiEmailContent = null
   } = apiParams;
 
+  // Get logged-in user's email for hiddenValue
+  const userEmail = getLoggedInUserEmail();
+  const hiddenValue = `{From person: ${userEmail}}`;
+
   if (DEBUG_LOGS_ENABLED) {
     console.log('BotAtWork API - formatPayload received apiParams:', apiParams);
     console.log('BotAtWork API - Extracted parameters:', { tone, pointOfView, additionalInstructions });
+    console.log('BotAtWork API - User email for hiddenValue:', userEmail);
   }
 
   // Clean and structure the prompt for better API understanding
@@ -70,7 +89,8 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
       description: clampText(descriptionMatch ? descriptionMatch[1].trim() : (apiDescription != null ? apiDescription : cleanPrompt)),
       //additionalInstructions: additionalInstructions || "Write a professional email that matches the specified tone and perspective exactly. Use 'we', 'our', 'us' for organization perspective and 'I', 'my', 'me' for individual perspective.",
       tone: tone, // Always use the dynamic tone parameter
-      pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective" // Map to API expected values
+      pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective", // Map to API expected values
+      hiddenValue: hiddenValue
     };
   }
 
@@ -81,7 +101,20 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
       emailContent: clampText(apiEmailContent != null ? apiEmailContent : cleanPrompt),
      // additionalInstructions: additionalInstructions || "Provide a relevant and contextual response that matches the specified tone and perspective. Use 'we', 'our', 'us' for organization perspective and 'I', 'my', 'me' for individual perspective.",
       tone,
-      pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective"
+      pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective",
+      hiddenValue: hiddenValue
+    };
+  }
+
+  // For email edit tasks (editing existing emails)
+  if (taskType === 'emailEdit') {
+    return {
+      chooseATask: "emailEdit",
+      emailContent: clampText(apiEmailContent != null ? apiEmailContent : cleanPrompt),
+      additionalInstructions: additionalInstructions || "",
+      tone,
+      pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective",
+      hiddenValue: hiddenValue
     };
   }
 
@@ -92,7 +125,8 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
       description: clampText(cleanPrompt),
      // additionalInstructions: additionalInstructions || "Provide a helpful and conversational response. Use 'we', 'our', 'us' for organization perspective and 'I', 'my', 'me' for individual perspective.",
       tone,
-      pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective"
+      pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective",
+      hiddenValue: hiddenValue
     };
   }
 
@@ -102,7 +136,8 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
     description: clampText(apiDescription != null ? apiDescription : cleanPrompt),
    // additionalInstructions: additionalInstructions || "Write a professional email that matches the specified tone and perspective. Use 'we', 'our', 'us' for organization perspective and 'I', 'my', 'me' for individual perspective.",
     tone,
-    pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective"
+    pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective",
+    hiddenValue: hiddenValue
   };
 };
 

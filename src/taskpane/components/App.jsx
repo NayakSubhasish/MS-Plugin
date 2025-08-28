@@ -325,6 +325,11 @@ const App = (props) => {
     tone: "formal",
     pointOfView: "Organization perspective"
   });
+  const [editEmailForm, setEditEmailForm] = React.useState({
+    additionalInstructions: "",
+    tone: "formal",
+    pointOfView: "organizationPerspective"
+  });
 
   // const [isDarkMode, setIsDarkMode] = React.useState(false); // dark mode temporarily disabled
   const [customPrompts, setCustomPrompts] = React.useState({
@@ -748,6 +753,92 @@ Enhanced email:`;
     setLoading(false);
   };
 
+  // Edit email function using the new API payload structure
+  const handleEditEmail = async () => {
+    setLoading(true);
+    setGeneratedContent("Editing email...");
+    
+    try {
+      const [emailBody, emailSubject] = await Promise.all([
+        getEmailBody(),
+        getEmailSubject()
+      ]);
+      
+      // Create the email content with subject and body
+      const emailContent = `Subject: ${emailSubject}\n\n${emailBody}`;
+      
+      // Use the new emailEdit task type with the specified payload structure
+      const apiParams = {
+        chooseATask: "emailEdit",
+        emailContent: emailContent,
+        additionalInstructions: editEmailForm.additionalInstructions || "",
+        tone: editEmailForm.tone.toLowerCase() || "formal",
+        pointOfView: editEmailForm.pointOfView || "organizationPerspective",
+        anonymize: null,
+        incognito: false,
+        default_language: "en-US",
+        should_stream: false
+      };
+      
+      const editedContent = await getSuggestedReply(emailContent, 2, apiParams);
+      
+      // Update the email body in Outlook with the edited content
+      if (window.Office && Office.context && Office.context.mailbox && Office.context.mailbox.item) {
+        // Convert plain text to HTML with proper formatting
+        const formattedContent = editedContent
+          .trim() // Remove leading/trailing whitespace
+          .replace(/\n\n+/g, '</p><p>') // Multiple line breaks become paragraph breaks
+          .replace(/\n/g, '<br/>') // Single line breaks become <br/>
+          .replace(/^(.+)$/s, '<p>$1</p>') // Wrap entire content in paragraph tags
+          .replace(/<p><\/p>/g, '') // Remove empty paragraphs
+          .replace(/<p><p>/g, '<p>') // Fix double paragraph tags
+          .replace(/<\/p><\/p>/g, '</p>'); // Fix double closing paragraph tags
+        
+        Office.context.mailbox.item.body.setAsync(
+          formattedContent,
+          { coercionType: Office.CoercionType.Html },
+          (result) => {
+            if (result.status === Office.AsyncResultStatus.Succeeded) {
+              setGeneratedContent(`
+                <div style="color: #107c10; font-weight: bold; margin-bottom: 16px;">
+                  ✅ Email Edited Successfully!
+                </div>
+                <div style="background: #f3f9f1; border: 1px solid #107c10; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
+                  <div style="margin-bottom: 8px;"><strong>Email Subject:</strong> ${emailSubject}</div>
+                  <div>Your email has been updated with the edited content. Please review the changes in your email composer and send when ready.</div>
+                </div>
+                <div style="background: #f8f9fa; border: 1px solid #d1d1d1; padding: 12px; border-radius: 4px;">
+                  <strong>Edited Content Preview:</strong><br/>
+                  ${editedContent.replace(/\n/g, '<br/>')}
+                </div>
+              `);
+            } else {
+              setGeneratedContent("Failed to update email. Please copy the edited content manually.");
+            }
+          }
+        );
+      } else {
+        setGeneratedContent(`
+          <div style="color: #107c10; font-weight: bold; margin-bottom: 16px;">
+            ✅ Email Edited Successfully!
+          </div>
+          <div style="background: #f8f9fa; border: 1px solid #d1d1d1; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
+            <div style="margin-bottom: 8px;"><strong>Email Subject:</strong> ${emailSubject}</div>
+            <strong>Edited Content:</strong><br/>
+            ${editedContent.replace(/\n/g, '<br/>')}
+          </div>
+          <div style="margin-top: 12px; color: #605e5c; font-size: 14px;">
+            Please copy this edited content to your email.
+          </div>
+        `);
+      }
+    } catch (error) {
+      setGeneratedContent(`Error editing email: ${error.message}`);
+    }
+    
+    setLoading(false);
+  };
+
 
 
   // Chat input send handler: send direct prompt to LLM
@@ -820,6 +911,12 @@ Enhanced email:`;
       setIsFirstResponse(true);
       setGeneratedContent("");
       setShowEnhanceButton(false);
+    } else if (data.value === 'editEmail') {
+      setShowWriteEmailForm(false);
+      setChatHistory([]);
+      setIsFirstResponse(true);
+      setShowEnhanceButton(false);
+      setGeneratedContent("");
     } else if (data.value === 'suggestReply') {
       setShowWriteEmailForm(false);
       setChatHistory([]);
@@ -905,9 +1002,30 @@ Enhanced email:`;
       <div className={styles.root}>
         <div className={styles.tabContainer}>
           <TabList selectedValue={activeTab} onTabSelect={handleTabSelect} style={{ width: '100%', display: 'flex' }}>
-                          <Tab value="writeEmail" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }}>Write Email</Tab>
-              <Tab value="suggestReply" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }}>Suggest Reply</Tab>
-              {/* <Tab value="validate" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }}>Validate</Tab> */}
+            <Tab value="writeEmail" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }} title="Write Email">
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+              </span>
+            </Tab>
+            <Tab value="editEmail" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }} title="Edit Email">
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </span>
+            </Tab>
+            <Tab value="suggestReply" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }} title="Suggest Reply">
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+              </span>
+            </Tab>
+            {/* <Tab value="validate" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }}>Validate</Tab> */}
           </TabList>
         </div>
         
@@ -1203,6 +1321,151 @@ Enhanced email:`;
           </div>
         )}
 
+        {activeTab === 'editEmail' && (
+          <div style={{
+            padding: '8px',
+            width: '100%',
+            boxSizing: 'border-box',
+            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+            borderRadius: '8px',
+            marginBottom: '8px'
+          }}>
+            <div style={{ marginBottom: '8px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '3px', 
+                fontWeight: '600',
+                fontSize: '14px',
+                color: '#323130'
+              }}>Additional Instructions</label>
+              <textarea
+                placeholder="Optional: Add specific instructions for editing the email (e.g., 'Make it more concise', 'Add a call to action', 'Change tone to be more friendly')"
+                value={editEmailForm.additionalInstructions}
+                onChange={(e) => setEditEmailForm({...editEmailForm, additionalInstructions: e.target.value})}
+                style={{
+                  width: '100%',
+                  minHeight: '60px',
+                  padding: '6px',
+                  border: '1px solid #d1d1d1',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  fontFamily: 'inherit',
+                  resize: 'vertical',
+                  boxSizing: 'border-box',
+                  backgroundColor: '#ffffff',
+                  transition: 'border-color 0.2s ease',
+                  outline: 'none'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#0078d4'}
+                onBlur={(e) => e.target.style.borderColor = '#d1d1d1'}
+              />
+            </div>
+            
+            <div style={{ 
+              display: 'flex', 
+              gap: '8px', 
+              marginBottom: '10px',
+              alignItems: 'flex-end'
+            }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '3px', 
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  color: '#323130'
+                }}>Tone</label>
+                <select
+                  value={editEmailForm.tone}
+                  onChange={(e) => setEditEmailForm({...editEmailForm, tone: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '6px',
+                    border: '1px solid #d1d1d1',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    fontFamily: 'inherit',
+                    backgroundColor: '#ffffff',
+                    boxSizing: 'border-box',
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#0078d4'}
+                  onBlur={(e) => e.target.style.borderColor = '#d1d1d1'}
+                >
+                  <option value="formal">Formal</option>
+                  <option value="professional">Professional</option>
+                  <option value="casual">Casual</option>
+                  <option value="empathetic">Empathetic</option>
+                </select>
+              </div>
+              
+              <div style={{ flex: 1 }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '3px', 
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  color: '#323130'
+                }}>Point of View</label>
+                <select
+                  value={editEmailForm.pointOfView}
+                  onChange={(e) => setEditEmailForm({...editEmailForm, pointOfView: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '6px',
+                    border: '1px solid #d1d1d1',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    fontFamily: 'inherit',
+                    backgroundColor: '#ffffff',
+                    boxSizing: 'border-box',
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#0078d4'}
+                  onBlur={(e) => e.target.style.borderColor = '#d1d1d1'}
+                >
+                  <option value="organizationPerspective">Organization perspective</option>
+                  <option value="individualPerspective">Individual perspective</option>
+                </select>
+              </div>
+            </div>
+            
+            <Button
+              appearance="primary"
+              onClick={handleEditEmail}
+              disabled={loading}
+              style={{ 
+                width: '100%',
+                padding: '8px 16px',
+                fontSize: '15px',
+                fontWeight: '600',
+                borderRadius: '4px',
+                minHeight: '36px',
+                backgroundColor: '#0078d4',
+                color: '#ffffff',
+                border: 'none',
+                opacity: loading ? 0.5 : 1
+              }}
+            >
+              {loading ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <div style={{
+                    width: '16px',
+                    height: '16px',
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    borderRadius: '50%',
+                    borderTop: '2px solid #ffffff',
+                    animation: 'spin 1s linear infinite'
+                  }}></div>
+                  <span>Editing...</span>
+                </div>
+              ) : 'Edit Current Email'}
+            </Button>
+          </div>
+        )}
+
         {/* Validate tab content - temporarily hidden
         {activeTab === 'validate' && (
           <div style={{
@@ -1360,7 +1623,7 @@ Enhanced email:`;
         )}
         
         {(() => {
-          const shouldShow = (activeTab === 'suggestReply' || (activeTab === 'writeEmail' && generatedContent && !generatedContent.includes("Generating")) /* || (activeTab === 'validate' && generatedContent && !generatedContent.includes("Validating")) */);
+          const shouldShow = (activeTab === 'suggestReply' || activeTab === 'editEmail' || (activeTab === 'writeEmail' && generatedContent && !generatedContent.includes("Generating")) /* || (activeTab === 'validate' && generatedContent && !generatedContent.includes("Validating")) */);
           console.log('Chat input should show:', shouldShow, 'activeTab:', activeTab, 'generatedContent:', generatedContent);
           return shouldShow;
         })() && (
