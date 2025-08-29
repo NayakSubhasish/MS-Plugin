@@ -99,7 +99,7 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
     return {
       chooseATask: "emailResponse",
       emailContent: clampText(apiEmailContent != null ? apiEmailContent : cleanPrompt),
-     // additionalInstructions: additionalInstructions || "Provide a relevant and contextual response that matches the specified tone and perspective. Use 'we', 'our', 'us' for organization perspective and 'I', 'my', 'me' for individual perspective.",
+      additionalInstructions: additionalInstructions || "",
       tone,
       pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective",
       hiddenValue: hiddenValue
@@ -107,11 +107,11 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
   }
 
   // For email edit tasks (editing existing emails)
-  if (taskType === 'emailEdit') {
+  if (taskType === 'emailRewrite') {
     return {
-      chooseATask: "emailEdit",
+      chooseATask: "emailRewrite",
       emailContent: clampText(apiEmailContent != null ? apiEmailContent : cleanPrompt),
-      additionalInstructions: additionalInstructions || "",
+      //additionalInstructions: additionalInstructions || "",
       tone,
       pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective",
       hiddenValue: hiddenValue

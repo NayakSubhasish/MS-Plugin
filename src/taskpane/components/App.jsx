@@ -175,6 +175,16 @@ const useStyles = makeStyles({
       opacity: "0.7",
     },
   },
+  "@keyframes bounce": {
+    "0%, 80%, 100%": {
+      transform: "scale(0)",
+      opacity: "0.5",
+    },
+    "40%": {
+      transform: "scale(1)",
+      opacity: "1",
+    },
+  },
   // Global spin animation for button spinners
   "@global": {
     "@keyframes spin": {
@@ -321,7 +331,7 @@ const App = (props) => {
   const [showWriteEmailForm, setShowWriteEmailForm] = React.useState(true);
   const [emailForm, setEmailForm] = React.useState({
     description: "",
-    // additionalInstructions: "", // Commented out as per user request
+    additionalInstructions: "",
     tone: "formal",
     pointOfView: "Organization perspective"
   });
@@ -342,10 +352,43 @@ const App = (props) => {
   const [isFirstResponse, setIsFirstResponse] = React.useState(true);
   const [showEnhanceButton, setShowEnhanceButton] = React.useState(false);
   const [missingKeywords, setMissingKeywords] = React.useState([]);
+  const [loadingStep, setLoadingStep] = React.useState(0);
+  const [loadingProgress, setLoadingProgress] = React.useState(0);
 
+  
   // Responsive header style
   const headerTitle = "SalesGenie AI";
   const headerLogo = "assets/logo-filled.webp";
+
+  // Dynamic loading animation
+  React.useEffect(() => {
+    if (loading) {
+      setLoadingStep(0);
+      setLoadingProgress(0);
+      
+      const stepInterval = setInterval(() => {
+        setLoadingStep(prev => (prev + 1) % 4);
+      }, 1500);
+      
+      const progressInterval = setInterval(() => {
+        setLoadingProgress(prev => {
+          if (prev >= 90) return prev;
+          return prev + Math.random() * 15;
+        });
+      }, 300);
+      
+      return () => {
+        clearInterval(stepInterval);
+        clearInterval(progressInterval);
+      };
+    } else {
+      setLoadingProgress(100);
+      setTimeout(() => {
+        setLoadingStep(0);
+        setLoadingProgress(0);
+      }, 500);
+    }
+  }, [loading]);
   
 
   // Helper to get email body from Outlook
@@ -486,7 +529,7 @@ const App = (props) => {
         emailContent: contextWithThread, // Pass the actual email content, not the formatted prompt
         tone: emailForm.tone.toLowerCase() || "formal",
         pointOfView: emailForm.pointOfView === "Individual perspective" ? "individualPerspective" : "organizationPerspective",
-        additionalInstructions: ""
+        additionalInstructions: emailForm.additionalInstructions || ""
       };
       
       const reply = await getSuggestedReply(contextWithThread, 2, apiParams);
@@ -809,7 +852,7 @@ Enhanced email:`;
                 </div>
                 <div style="background: #f8f9fa; border: 1px solid #d1d1d1; padding: 12px; border-radius: 4px;">
                   <strong>Edited Content Preview:</strong><br/>
-                  ${editedContent.replace(/\n/g, '<br/>')}
+                  ${convertMarkdownToHtml(editedContent)}
                 </div>
               `);
             } else {
@@ -825,7 +868,7 @@ Enhanced email:`;
           <div style="background: #f8f9fa; border: 1px solid #d1d1d1; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
             <div style="margin-bottom: 8px;"><strong>Email Subject:</strong> ${emailSubject}</div>
             <strong>Edited Content:</strong><br/>
-            ${editedContent.replace(/\n/g, '<br/>')}
+            ${convertMarkdownToHtml(editedContent)}
           </div>
           <div style="margin-top: 12px; color: #605e5c; font-size: 14px;">
             Please copy this edited content to your email.
@@ -1010,11 +1053,17 @@ Enhanced email:`;
                 </svg>
               </span>
             </Tab>
-            <Tab value="editEmail" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }} title="Edit Email">
+            <Tab value="editEmail" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }} title="Email Rewrite">
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  {/* Envelope base */}
+                  <rect x="2" y="7" width="20" height="13" rx="2" ry="2"/>
+                  <polyline points="2,7 12,15 22,7"/>
+
+                  {/* Large diagonal pen */}
+                  <path d="M18 2l4 4-9 9-4 1 1-4 9-9z"/>
+                  {/* Pen tip highlight */}
+                  <line x1="16" y1="4" x2="20" y2="8"/>
                 </svg>
               </span>
             </Tab>
@@ -1287,6 +1336,41 @@ Enhanced email:`;
               </select>
               </div>
             </div>
+            
+            {/* Additional Instructions section */}
+            <div style={{ marginBottom: '10px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '3px', 
+                fontWeight: '600', 
+                fontSize: '14px',
+                color: '#323130' 
+              }}>
+                Additional Instructions (Optional)
+              </label>
+              <textarea
+                placeholder="Add any specific instructions for the reply generation..."
+                value={emailForm.additionalInstructions}
+                onChange={(e) => setEmailForm({ ...emailForm, additionalInstructions: e.target.value })}
+                style={{
+                  width: '100%',
+                  minHeight: '60px',
+                  padding: '6px',
+                  border: '1px solid #d1d1d1',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  fontFamily: 'inherit',
+                  resize: 'vertical',
+                  boxSizing: 'border-box',
+                  backgroundColor: '#ffffff',
+                  transition: 'border-color 0.2s ease',
+                  outline: 'none'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#0078d4'}
+                onBlur={(e) => e.target.style.borderColor = '#d1d1d1'}
+              />
+            </div>
+            
             <Button
               appearance="primary"
               onClick={() => callGemini(customPrompts.suggestReply)}
@@ -1519,54 +1603,133 @@ Enhanced email:`;
         <div className={styles.contentArea}>
           {loading ? (
             <div className={styles.loadingContainer}>
+              {/* Dynamic Loading Spinner */}
               <div style={{
                 position: 'relative',
-                width: '60px',
-                height: '60px',
+                width: '80px',
+                height: '80px',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                marginBottom: '20px'
               }}>
+                {/* Outer ring */}
                 <div style={{
                   position: 'absolute',
                   width: '100%',
                   height: '100%',
                   borderRadius: '50%',
-                  border: '4px solid rgba(0, 120, 212, 0.2)',
-                  borderTop: '4px solid #0078d4',
-                  animation: 'spin 1s linear infinite',
-                  transformOrigin: 'center',
-                  willChange: 'transform'
+                  border: '3px solid rgba(0, 120, 212, 0.1)',
+                  borderTop: '3px solid #0078d4',
+                  animation: 'spin 1.5s linear infinite',
+                  transformOrigin: 'center'
                 }}></div>
+                
+                {/* Middle ring */}
                 <div style={{
                   position: 'absolute',
                   width: '70%',
                   height: '70%',
                   borderRadius: '50%',
-                  border: '3px solid rgba(0, 120, 212, 0.15)',
-                  borderRight: '3px solid #106ebe',
-                  animation: 'spin 0.8s linear infinite reverse',
-                  transformOrigin: 'center',
-                  willChange: 'transform'
+                  border: '2px solid rgba(16, 110, 190, 0.1)',
+                  borderRight: '2px solid #106ebe',
+                  animation: 'spin 1s linear infinite reverse',
+                  transformOrigin: 'center'
                 }}></div>
+                
+                {/* Inner ring */}
                 <div style={{
                   position: 'absolute',
                   width: '40%',
                   height: '40%',
                   borderRadius: '50%',
-                  border: '2px solid rgba(0, 120, 212, 0.1)',
+                  border: '2px solid rgba(0, 90, 158, 0.1)',
                   borderBottom: '2px solid #005a9e',
-                  animation: 'spin 1.2s linear infinite',
-                  transformOrigin: 'center',
-                  willChange: 'transform'
+                  animation: 'spin 0.8s linear infinite',
+                  transformOrigin: 'center'
+                }}></div>
+                
+                {/* Center dot with pulse */}
+                <div style={{
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  backgroundColor: '#0078d4',
+                  animation: 'pulse 1.2s ease-in-out infinite',
+                  boxShadow: '0 0 10px rgba(0, 120, 212, 0.5)'
                 }}></div>
               </div>
-              <div className={styles.loadingText}>
-                {generatedContent === "Generating..." ? "Generating your content..." :
+
+              {/* Progress Bar */}
+              <div style={{
+                width: '200px',
+                height: '4px',
+                backgroundColor: 'rgba(0, 120, 212, 0.1)',
+                borderRadius: '2px',
+                marginBottom: '16px',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  width: `${loadingProgress}%`,
+                  height: '100%',
+                  backgroundColor: '#0078d4',
+                  borderRadius: '2px',
+                  transition: 'width 0.3s ease',
+                  boxShadow: '0 0 8px rgba(0, 120, 212, 0.6)'
+                }}></div>
+              </div>
+
+              {/* Dynamic Loading Text */}
+              <div style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                color: '#323130',
+                marginBottom: '8px',
+                textAlign: 'center'
+              }}>
+                {(() => {
+                  const messages = [
+                    "🤖 Analyzing your request...",
+                    "📝 Crafting your content...",
+                    "✨ Adding finishing touches...",
+                    "🚀 Almost ready..."
+                  ];
+                  return messages[loadingStep];
+                })()}
+              </div>
+
+              {/* Status Text */}
+              <div style={{
+                fontSize: '14px',
+                color: '#605e5c',
+                textAlign: 'center',
+                opacity: 0.8
+              }}>
+                {generatedContent === "Generating..." ? "Preparing your content..." :
                  generatedContent === "Generating email..." ? "Creating your email..." :
                  generatedContent === "Enhancing email with missing keywords..." ? "Enhancing your email..." :
                  generatedContent === "Validating email content..." ? "Validating your email..." :
+                 generatedContent === "Editing email..." ? "Rewriting your email..." :
                  "Processing your request..."}
+              </div>
+
+              {/* Animated Dots */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '4px',
+                marginTop: '12px'
+              }}>
+                {[0, 1, 2].map(i => (
+                  <div key={i} style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    backgroundColor: '#0078d4',
+                    animation: `bounce 1.4s ease-in-out infinite`,
+                    animationDelay: `${i * 0.16}s`
+                  }}></div>
+                ))}
               </div>
             </div>
           ) : (
