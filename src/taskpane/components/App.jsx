@@ -1603,62 +1603,6 @@ Enhanced email:`;
         <div className={styles.contentArea}>
           {loading ? (
             <div className={styles.loadingContainer}>
-              {/* Dynamic Loading Spinner */}
-              <div style={{
-                position: 'relative',
-                width: '80px',
-                height: '80px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '20px'
-              }}>
-                {/* Outer ring */}
-                <div style={{
-                  position: 'absolute',
-                  width: '100%',
-                  height: '100%',
-                  borderRadius: '50%',
-                  border: '3px solid rgba(0, 120, 212, 0.1)',
-                  borderTop: '3px solid #0078d4',
-                  animation: 'spin 1.5s linear infinite',
-                  transformOrigin: 'center'
-                }}></div>
-                
-                {/* Middle ring */}
-                <div style={{
-                  position: 'absolute',
-                  width: '70%',
-                  height: '70%',
-                  borderRadius: '50%',
-                  border: '2px solid rgba(16, 110, 190, 0.1)',
-                  borderRight: '2px solid #106ebe',
-                  animation: 'spin 1s linear infinite reverse',
-                  transformOrigin: 'center'
-                }}></div>
-                
-                {/* Inner ring */}
-                <div style={{
-                  position: 'absolute',
-                  width: '40%',
-                  height: '40%',
-                  borderRadius: '50%',
-                  border: '2px solid rgba(0, 90, 158, 0.1)',
-                  borderBottom: '2px solid #005a9e',
-                  animation: 'spin 0.8s linear infinite',
-                  transformOrigin: 'center'
-                }}></div>
-                
-                {/* Center dot with pulse */}
-                <div style={{
-                  width: '12px',
-                  height: '12px',
-                  borderRadius: '50%',
-                  backgroundColor: '#0078d4',
-                  animation: 'pulse 1.2s ease-in-out infinite',
-                  boxShadow: '0 0 10px rgba(0, 120, 212, 0.5)'
-                }}></div>
-              </div>
 
               {/* Progress Bar */}
               <div style={{
