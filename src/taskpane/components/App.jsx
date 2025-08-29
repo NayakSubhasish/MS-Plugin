@@ -4,6 +4,18 @@ import PromptConfig from "./PromptConfig";
 import { Button, makeStyles, tokens, FluentProvider, teamsLightTheme, teamsDarkTheme, Switch, Label, Tab, TabList } from "@fluentui/react-components";
 import { getSuggestedReply } from "../botAtWorkApi";
 
+// Helper function to get logged-in user's email (copied from botAtWorkApi.js)
+const getLoggedInUserEmail = () => {
+  try {
+    if (window.Office && Office.context && Office.context.mailbox && Office.context.mailbox.userProfile && Office.context.mailbox.userProfile.emailAddress) {
+      return Office.context.mailbox.userProfile.emailAddress;
+    }
+  } catch (error) {
+    console.warn('Failed to get user email:', error);
+  }
+  return "unknown@unknown.com";
+};
+
 // Minimal Markdown → HTML converter for lists and tables
 function convertMarkdownToHtml(markdown) {
   if (!markdown) return "";
@@ -354,11 +366,25 @@ const App = (props) => {
   const [missingKeywords, setMissingKeywords] = React.useState([]);
   const [loadingStep, setLoadingStep] = React.useState(0);
   const [loadingProgress, setLoadingProgress] = React.useState(0);
+  const [currentUserEmail, setCurrentUserEmail] = React.useState("");
 
   
   // Responsive header style
   const headerTitle = "SalesGenie AI";
   const headerLogo = "assets/logo-filled.webp";
+
+  // Get current user email on component mount
+  React.useEffect(() => {
+    const userEmail = getLoggedInUserEmail();
+    setCurrentUserEmail(userEmail);
+    
+    // If user doesn't have access to editEmail tab and is currently on it, redirect to writeEmail
+    const hasEditAccess = userEmail === "champavathi.s@flatworldsolutions.com" || userEmail === "subhasish.n@flatworldsolutions.com";
+    if (!hasEditAccess && activeTab === "editEmail") {
+      setActiveTab("writeEmail");
+      setShowWriteEmailForm(true);
+    }
+  }, [currentUserEmail, activeTab]);
 
   // Dynamic loading animation
   React.useEffect(() => {
@@ -1053,20 +1079,23 @@ Enhanced email:`;
                 </svg>
               </span>
             </Tab>
-            <Tab value="editEmail" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }} title="Email Rewrite">
-              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  {/* Envelope base */}
-                  <rect x="2" y="7" width="20" height="13" rx="2" ry="2"/>
-                  <polyline points="2,7 12,15 22,7"/>
+            {/* Only show Edit Email tab for authorized users */}
+            {(currentUserEmail === "champavathi.s@flatworldsolutions.com" || currentUserEmail === "subhasish.n@flatworldsolutions.com") && (
+              <Tab value="editEmail" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }} title="Email Rewrite">
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    {/* Envelope base */}
+                    <rect x="2" y="7" width="20" height="13" rx="2" ry="2"/>
+                    <polyline points="2,7 12,15 22,7"/>
 
-                  {/* Large diagonal pen */}
-                  <path d="M18 2l4 4-9 9-4 1 1-4 9-9z"/>
-                  {/* Pen tip highlight */}
-                  <line x1="16" y1="4" x2="20" y2="8"/>
-                </svg>
-              </span>
-            </Tab>
+                    {/* Large diagonal pen */}
+                    <path d="M18 2l4 4-9 9-4 1 1-4 9-9z"/>
+                    {/* Pen tip highlight */}
+                    <line x1="16" y1="4" x2="20" y2="8"/>
+                  </svg>
+                </span>
+              </Tab>
+            )}
             <Tab value="suggestReply" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }} title="Suggest Reply">
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
