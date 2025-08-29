@@ -1834,4 +1834,4 @@ App.propTypes = {
 
 export default App;
 
-console.log("Arnav and Akshay, ALok");
+console.log("Arnav and0 ALok");
