@@ -836,9 +836,9 @@ Enhanced email:`;
       // Create the email content with subject and body
       const emailContent = `Subject: ${emailSubject}\n\n${emailBody}`;
       
-      // Use the new emailEdit task type with the specified payload structure
+      // Use the emailRewrite task type with the specified payload structure
       const apiParams = {
-        chooseATask: "emailEdit",
+        chooseATask: "emailRewrite",
         emailContent: emailContent,
         additionalInstructions: editEmailForm.additionalInstructions || "",
         tone: editEmailForm.tone.toLowerCase() || "formal",
@@ -853,39 +853,50 @@ Enhanced email:`;
       
       // Update the email body in Outlook with the edited content
       if (window.Office && Office.context && Office.context.mailbox && Office.context.mailbox.item) {
-        // Convert plain text to HTML with proper formatting
-        const formattedContent = editedContent
-          .trim() // Remove leading/trailing whitespace
-          .replace(/\n\n+/g, '</p><p>') // Multiple line breaks become paragraph breaks
-          .replace(/\n/g, '<br/>') // Single line breaks become <br/>
-          .replace(/^(.+)$/s, '<p>$1</p>') // Wrap entire content in paragraph tags
-          .replace(/<p><\/p>/g, '') // Remove empty paragraphs
-          .replace(/<p><p>/g, '<p>') // Fix double paragraph tags
-          .replace(/<\/p><\/p>/g, '</p>'); // Fix double closing paragraph tags
-        
-        Office.context.mailbox.item.body.setAsync(
-          formattedContent,
-          { coercionType: Office.CoercionType.Html },
-          (result) => {
-            if (result.status === Office.AsyncResultStatus.Succeeded) {
-              setGeneratedContent(`
-                <div style="color: #107c10; font-weight: bold; margin-bottom: 16px;">
-                  ✅ Email Edited Successfully!
-                </div>
-                <div style="background: #f3f9f1; border: 1px solid #107c10; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
-                  <div style="margin-bottom: 8px;"><strong>Email Subject:</strong> ${emailSubject}</div>
-                  <div>Your email has been updated with the edited content. Please review the changes in your email composer and send when ready.</div>
-                </div>
-                <div style="background: #f8f9fa; border: 1px solid #d1d1d1; padding: 12px; border-radius: 4px;">
-                  <strong>Edited Content Preview:</strong><br/>
-                  ${convertMarkdownToHtml(editedContent)}
-                </div>
-              `);
-            } else {
-              setGeneratedContent("Failed to update email. Please copy the edited content manually.");
+        const item = Office.context.mailbox.item;
+        // If we're not in compose mode, setAsync won't be available. Show a friendly message instead of throwing.
+        if (!(item && item.body && typeof item.body.setAsync === 'function')) {
+          setGeneratedContent(`
+            <div style="color: #004578; font-weight: bold; margin-bottom: 12px;">ℹ️ Edit Email is only available while composing</div>
+            <div style="background: #f8f9fa; border: 1px solid #d1d1d1; padding: 12px; border-radius: 4px;">
+              This feature works when you are composing a new email or draft mode.
+            </div>
+          `);
+        } else {
+          // Convert plain text to HTML with proper formatting
+          const formattedContent = editedContent
+            .trim()
+            .replace(/\n\n+/g, '</p><p>')
+            .replace(/\n/g, '<br/>')
+            .replace(/^(.+)$/s, '<p>$1</p>')
+            .replace(/<p><\/p>/g, '')
+            .replace(/<p><p>/g, '<p>')
+            .replace(/<\/p><\/p>/g, '</p>');
+
+          item.body.setAsync(
+            formattedContent,
+            { coercionType: Office.CoercionType.Html },
+            (result) => {
+              if (result.status === Office.AsyncResultStatus.Succeeded) {
+                setGeneratedContent(`
+                  <div style="color: #107c10; font-weight: bold; margin-bottom: 16px;">
+                    ✅ Email Edited Successfully!
+                  </div>
+                  <div style="background: #f3f9f1; border: 1px solid #107c10; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
+                    <div style="margin-bottom: 8px;"><strong>Email Subject:</strong> ${emailSubject}</div>
+                    <div>Your email has been updated with the edited content. Please review the changes in your email composer and send when ready.</div>
+                  </div>
+                  <div style="background: #f8f9fa; border: 1px solid #d1d1d1; padding: 12px; border-radius: 4px;">
+                    <strong>Edited Content Preview:</strong><br/>
+                    ${convertMarkdownToHtml(editedContent)}
+                  </div>
+                `);
+              } else {
+                setGeneratedContent("Failed to update email. Please copy the edited content manually.");
+              }
             }
-          }
-        );
+          );
+        }
       } else {
         setGeneratedContent(`
           <div style="color: #107c10; font-weight: bold; margin-bottom: 16px;">
@@ -902,7 +913,15 @@ Enhanced email:`;
         `);
       }
     } catch (error) {
-      setGeneratedContent(`Error editing email: ${error.message}`);
+      const message = (error && typeof error.message === 'string' && error.message.includes('setAsync'))
+        ? `
+          <div style="color: #004578; font-weight: bold; margin-bottom: 12px;">ℹ️ Edit Email is only available while composing</div>
+          <div style="background: #f8f9fa; border: 1px solid #d1d1d1; padding: 12px; border-radius: 4px;">
+            This feature works when you are composing a new email or draft mode.
+          </div>
+        `
+        : `Error editing email: ${error.message}`;
+      setGeneratedContent(message);
     }
     
     setLoading(false);
@@ -1083,24 +1102,13 @@ Enhanced email:`;
             {(currentUserEmail === "champavathi.s@flatworldsolutions.com" || currentUserEmail === "subhasish.n@flatworldsolutions.com") && (
               <Tab value="editEmail" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }} title="Email Rewrite">
                 <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    {/* Envelope base */}
-                    <rect x="2" y="7" width="20" height="13" rx="2" ry="2"/>
-                    <polyline points="2,7 12,15 22,7"/>
-
-                    {/* Large diagonal pen */}
-                    <path d="M18 2l4 4-9 9-4 1 1-4 9-9z"/>
-                    {/* Pen tip highlight */}
-                    <line x1="16" y1="4" x2="20" y2="8"/>
-                  </svg>
+                  <img src="assets/Rewrite email.png" alt="Rewrite email" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
                 </span>
               </Tab>
             )}
             <Tab value="suggestReply" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }} title="Suggest Reply">
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                </svg>
+                <img src="assets/Suggest reply icon.png" alt="Suggest reply" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
               </span>
             </Tab>
             {/* <Tab value="validate" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }}>Validate</Tab> */}

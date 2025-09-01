@@ -106,12 +106,12 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
     };
   }
 
-  // For email edit tasks (editing existing emails)
+  // For email rewrite tasks (editing existing emails)
   if (taskType === 'emailRewrite') {
     return {
       chooseATask: "emailRewrite",
       emailContent: clampText(apiEmailContent != null ? apiEmailContent : cleanPrompt),
-      //additionalInstructions: additionalInstructions || "",
+      additionalInstructions: additionalInstructions || "",
       tone,
       pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective",
       hiddenValue: hiddenValue
@@ -194,13 +194,14 @@ export async function getSuggestedReply(prompt, maxRetries = 2, apiParams = {}) 
         console.log("Request payload:", JSON.stringify(requestBody, null, 2));
       }
 
-      // Cancel any previous in-flight request
+      // Cancel any previous in-flight request (only when a NEW request starts)
       if (lastController) {
-        try { lastController.abort(); } catch (_) {}
+        try { lastController.abort('new-request'); } catch (_) {}
       }
       const controller = new AbortController();
       lastController = controller;
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      // IMPORTANT: Do not set a per-request timeout. Some generations can take
+      // longer than 10–15s; we want to wait until the server responds.
 
       const response = await fetch(BOTATWORK_API_URL, {
         method: "POST",
@@ -211,7 +212,7 @@ export async function getSuggestedReply(prompt, maxRetries = 2, apiParams = {}) 
         body: JSON.stringify(requestBody),
         signal: controller.signal
       });
-      clearTimeout(timeoutId);
+      // No timeout to clear since we allow long-running requests
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
