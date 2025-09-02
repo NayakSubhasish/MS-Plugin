@@ -37,6 +37,42 @@ const REQUIRED_KEYWORDS = {
   }
 };
 
+// Helper function to convert markdown to proper HTML for Outlook
+function convertMarkdownToOutlookHtml(markdownText) {
+  if (!markdownText || typeof markdownText !== 'string') {
+    return markdownText || '';
+  }
+
+  let html = markdownText
+    // Convert bullet points (both - and * formats)
+    .replace(/^[\s]*[-*][\s]+(.+)$/gm, '<li>$1</li>')
+    // Convert numbered lists
+    .replace(/^[\s]*\d+\.\s+(.+)$/gm, '<li>$1</li>')
+    // Wrap lists in proper ul/ol tags
+    .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+    // Convert bold text (**text** or __text__)
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/__(.*?)__/g, '<strong>$1</strong>')
+    // Convert italic text (*text* or _text_)
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/_(.*?)_/g, '<em>$1</em>')
+    // Convert line breaks to proper HTML
+    .replace(/\n\n+/g, '</p><p>')
+    .replace(/\n/g, '<br/>')
+    // Wrap in paragraph tags
+    .replace(/^(.+)$/s, '<p>$1</p>')
+    // Clean up empty paragraphs and double tags
+    .replace(/<p><\/p>/g, '')
+    .replace(/<p><p>/g, '<p>')
+    .replace(/<\/p><\/p>/g, '</p>')
+    // Fix list formatting - ensure proper spacing
+    .replace(/<\/ul>\s*<ul>/g, '</ul><ul>')
+    .replace(/<\/p>\s*<ul>/g, '</p><ul>')
+    .replace(/<\/ul>\s*<p>/g, '</ul><p>');
+
+  return html;
+}
+
 // Main validation function called on email send
 function validateEmail(event) {
   console.log('Email validation triggered');
@@ -167,10 +203,13 @@ function addKeywordsToEmail(selectedKeywords, event) {
     // Generate enhanced content with keywords
     generateEnhancedEmail(currentBody, selectedKeywords, isReply, (enhancedContent) => {
       if (enhancedContent && !enhancedContent.startsWith('API error:') && !enhancedContent.startsWith('Failed to generate enhanced email:') && !enhancedContent.startsWith('Error calling BotAtWork API:')) {
-        // Update email body with enhanced content
+        // Update email body with enhanced content - convert markdown to HTML for proper formatting
+        const formattedHtml = convertMarkdownToOutlookHtml(enhancedContent);
+        console.log('🔧 Converting markdown to HTML for email validation...');
+        
         item.body.setAsync(
-          enhancedContent,
-          { coercionType: Office.CoercionType.Text },
+          formattedHtml,
+          { coercionType: Office.CoercionType.Html },
           (setResult) => {
             if (setResult.status === Office.AsyncResultStatus.Succeeded) {
               console.log('Email enhanced with keywords');

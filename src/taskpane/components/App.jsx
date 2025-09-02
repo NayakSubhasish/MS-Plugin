@@ -16,91 +16,40 @@ const getLoggedInUserEmail = () => {
   return "unknown@unknown.com";
 };
 
-// Minimal Markdown → HTML converter for lists and tables
-function convertMarkdownToHtml(markdown) {
-  if (!markdown) return "";
-  // If content already contains HTML tags, assume it's HTML
-  if (/<\w+[^>]*>/.test(markdown)) return markdown;
-
-  const lines = markdown.split(/\r?\n/);
-  const html = [];
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-
-    // Table detection: at least 2 rows with pipes and a separator row ---
-    if (line.includes('|')) {
-      const header = line;
-      const sep = lines[i + 1] || '';
-      if (/^\s*\|?\s*:?[-\s|]+:?\s*\|?\s*$/.test(sep)) {
-        const rows = [];
-        i += 2;
-        while (i < lines.length && lines[i].includes('|')) {
-          rows.push(lines[i]);
-          i++;
-        }
-        const headerCells = header.split('|').map(c => c.trim()).filter(Boolean);
-        const rowCells = rows.map(r => r.split('|').map(c => c.trim()).filter(Boolean));
-        const thead = `<thead><tr>${headerCells.map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>`;
-        const tbody = `<tbody>${rowCells.map(r => `<tr>${r.map(c => `<td>${escapeHtml(c)}</td>`).join('')}</tr>`).join('')}</tbody>`;
-        html.push(`<table>${thead}${tbody}</table>`);
-        continue;
-      }
-    }
-
-    // Unordered list
-    if (/^\s*[-*]\s+/.test(line)) {
-      const items = [];
-      while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
-        items.push(lines[i].replace(/^\s*[-*]\s+/, ''));
-        i++;
-      }
-      html.push(`<ul>${items.map(item => `<li>${inlineMd(item)}</li>`).join('')}</ul>`);
-      continue;
-    }
-
-    // Ordered list
-    if (/^\s*\d+\.\s+/.test(line)) {
-      const items = [];
-      while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
-        items.push(lines[i].replace(/^\s*\d+\.\s+/, ''));
-        i++;
-      }
-      html.push(`<ol>${items.map(item => `<li>${inlineMd(item)}</li>`).join('')}</ol>`);
-      continue;
-    }
-
-    // Paragraphs (preserve blank lines)
-    if (line.trim() === '') {
-      html.push('');
-      i++;
-      continue;
-    }
-    html.push(`<p>${inlineMd(line)}</p>`);
-    i++;
+// Helper function to convert markdown to proper HTML for Outlook
+function convertMarkdownToOutlookHtml(markdownText) {
+  if (!markdownText || typeof markdownText !== 'string') {
+    return markdownText || '';
   }
 
-  // Linkify plain URLs
-  const joined = html.join('\n')
-    .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
-  return joined;
+  let html = markdownText
+    // Convert bullet points (both - and * formats)
+    .replace(/^[\s]*[-*][\s]+(.+)$/gm, '<li>$1</li>')
+    // Convert numbered lists
+    .replace(/^[\s]*\d+\.\s+(.+)$/gm, '<li>$1</li>')
+    // Wrap lists in proper ul/ol tags
+    .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+    // Convert bold text (**text** or __text__)
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/__(.*?)__/g, '<strong>$1</strong>')
+    // Convert italic text (*text* or _text_)
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/_(.*?)_/g, '<em>$1</em>')
+    // Convert line breaks to proper HTML
+    .replace(/\n\n+/g, '</p><p>')
+    .replace(/\n/g, '<br/>')
+    // Wrap in paragraph tags
+    .replace(/^(.+)$/s, '<p>$1</p>')
+    // Clean up empty paragraphs and double tags
+    .replace(/<p><\/p>/g, '')
+    .replace(/<p><p>/g, '<p>')
+    .replace(/<\/p><\/p>/g, '</p>')
+    // Fix list formatting - ensure proper spacing
+    .replace(/<\/ul>\s*<ul>/g, '</ul><ul>')
+    .replace(/<\/p>\s*<ul>/g, '</p><ul>')
+    .replace(/<\/ul>\s*<p>/g, '</ul><p>');
 
-  function inlineMd(text) {
-    // Escape then restore basic markdown formatting
-    let t = escapeHtml(text);
-    t = t.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-    t = t.replace(/\*(.*?)\*/g, '<i>$1</i>');
-    return t;
-  }
-
-  function escapeHtml(s) {
-    return String(s)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/\"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
+  return html;
 }
 
 const useStyles = makeStyles({
@@ -774,15 +723,8 @@ Enhanced email:`;
       
       // Update the email body in Outlook with proper HTML formatting
       if (window.Office && Office.context && Office.context.mailbox && Office.context.mailbox.item) {
-        // Convert plain text to HTML with proper formatting
-        const formattedContent = enhancedContent
-          .trim() // Remove leading/trailing whitespace
-          .replace(/\n\n+/g, '</p><p>') // Multiple line breaks become paragraph breaks
-          .replace(/\n/g, '<br/>') // Single line breaks become <br/>
-          .replace(/^(.+)$/s, '<p>$1</p>') // Wrap entire content in paragraph tags
-          .replace(/<p><\/p>/g, '') // Remove empty paragraphs
-          .replace(/<p><p>/g, '<p>') // Fix double paragraph tags
-          .replace(/<\/p><\/p>/g, '</p>'); // Fix double closing paragraph tags
+                  // Convert markdown to proper HTML for Outlook formatting
+          const formattedContent = convertMarkdownToOutlookHtml(enhancedContent);
         
         Office.context.mailbox.item.body.setAsync(
           formattedContent,
@@ -871,15 +813,8 @@ Enhanced email:`;
             </div>
           `);
         } else {
-          // Convert plain text to HTML with proper formatting
-          const formattedContent = editedContent
-            .trim()
-            .replace(/\n\n+/g, '</p><p>')
-            .replace(/\n/g, '<br/>')
-            .replace(/^(.+)$/s, '<p>$1</p>')
-            .replace(/<p><\/p>/g, '')
-            .replace(/<p><p>/g, '<p>')
-            .replace(/<\/p><\/p>/g, '</p>');
+          // Convert markdown to proper HTML for Outlook formatting
+          const formattedContent = convertMarkdownToOutlookHtml(editedContent);
 
           item.body.setAsync(
             formattedContent,
@@ -896,7 +831,7 @@ Enhanced email:`;
                   </div>
                   <div style="background: #f8f9fa; border: 1px solid #d1d1d1; padding: 12px; border-radius: 4px;">
                     <strong>Edited Content Preview:</strong><br/>
-                    ${convertMarkdownToHtml(editedContent)}
+                    ${convertMarkdownToOutlookHtml(editedContent)}
                   </div>
                 `);
               } else {
@@ -913,7 +848,7 @@ Enhanced email:`;
           <div style="background: #f8f9fa; border: 1px solid #d1d1d1; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
             <div style="margin-bottom: 8px;"><strong>Email Subject:</strong> ${emailSubject}</div>
             <strong>Edited Content:</strong><br/>
-            ${convertMarkdownToHtml(editedContent)}
+            ${convertMarkdownToOutlookHtml(editedContent)}
           </div>
           <div style="margin-top: 12px; color: #605e5c; font-size: 14px;">
             Please copy this edited content to your email.
@@ -1733,7 +1668,7 @@ Enhanced email:`;
             <div
               dangerouslySetInnerHTML={{
                 __html: generatedContent
-                  ? convertMarkdownToHtml(generatedContent)
+                  ? convertMarkdownToOutlookHtml(generatedContent)
                   : '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #605e5c; font-style: italic; text-align: center; padding: 30px;"><div><div style="font-size: 16px; margin-bottom: 6px;">✨ Your generated content will appear here</div><div style="font-size: 12px; opacity: 0.8;">Click a button above to get started</div></div></div>'
               }}
             />
