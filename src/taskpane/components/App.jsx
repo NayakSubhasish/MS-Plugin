@@ -393,8 +393,16 @@ const App = (props) => {
       setLoadingProgress(0);
       
       const stepInterval = setInterval(() => {
-        setLoadingStep(prev => (prev + 1) % 4);
-      }, 1500);
+        setLoadingStep(prev => {
+          // Continue progressing through messages without cycling back
+          const maxMessages = 12; // Total number of loading messages
+          if (prev < maxMessages - 1) {
+            return prev + 1;
+          }
+          // Stay on the last message instead of cycling
+          return prev;
+        });
+      }, 2000); // Slightly slower progression for better UX
       
       const progressInterval = setInterval(() => {
         setLoadingProgress(prev => {
@@ -1671,11 +1679,19 @@ Enhanced email:`;
                 {(() => {
                   const messages = [
                     "🤖 Analyzing your request...",
+                    "📊 Processing email context...",
+                    "🧠 Understanding requirements...",
                     "📝 Crafting your content...",
+                    "✍️ Refining the message...",
+                    "🎯 Optimizing tone and style...",
+                    "📋 Checking for completeness...",
                     "✨ Adding finishing touches...",
-                    "🚀 Almost ready..."
+                    "🔍 Final review in progress...",
+                    "⚡ Optimizing response...",
+                    "🚀 Almost ready...",
+                    "🎉 Finalizing your content..."
                   ];
-                  return messages[loadingStep];
+                  return messages[Math.min(loadingStep, messages.length - 1)];
                 })()}
               </div>
 
