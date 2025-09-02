@@ -141,7 +141,7 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
   };
 };
 
-export async function getSuggestedReply(prompt, maxRetries = 2, apiParams = {}) {
+export async function getSuggestedReply(prompt, maxRetries = 6, apiParams = {}) {
   // Extract dynamic parameters with defaults
   const {
     chooseATask = "emailWrite",
@@ -302,8 +302,8 @@ export async function getSuggestedReply(prompt, maxRetries = 2, apiParams = {}) 
         console.log(`Network error on attempt ${attempt}:`, e.message);
       }
       
-      // Check if this is a retryable network error
-      if (attempt < maxRetries && (e.message.includes('fetch') || e.message.includes('network') || e.message.includes('timeout'))) {
+      // Check if this is a retryable error (includes network issues, timeouts, or transient HTTP 5xx)
+      if (attempt < maxRetries && isRetryableError(e)) {
         const backoffDelay = Math.pow(2, attempt - 1) * 1000 + Math.random() * 1000;
         if (DEBUG_LOGS_ENABLED) {
           console.log(`Retrying in ${Math.round(backoffDelay)}ms...`);
