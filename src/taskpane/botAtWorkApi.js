@@ -36,6 +36,14 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const isRetryableError = (error) => {
   if (!error) return false;
   
+  const errorMessage = (error.message || error.toString() || '').toLowerCase();
+  
+  // Always retry HTTP 5xx errors (server errors) as they are usually transient
+  if (errorMessage.includes('500') || errorMessage.includes('502') || errorMessage.includes('503') || 
+      errorMessage.includes('504') || errorMessage.includes('http 5')) {
+    return true;
+  }
+  
   const retryableMessages = [
     'overloaded',
     'rate limit',
@@ -49,7 +57,6 @@ const isRetryableError = (error) => {
     '5'  // HTTP 5xx errors
   ];
   
-  const errorMessage = (error.message || error.toString() || '').toLowerCase();
   return retryableMessages.some(msg => errorMessage.includes(msg));
 };
 
@@ -141,7 +148,7 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
   };
 };
 
-export async function getSuggestedReply(prompt, maxRetries = 6, apiParams = {}) {
+export async function getSuggestedReply(prompt, maxRetries = 10, apiParams = {}) {
   // Extract dynamic parameters with defaults
   const {
     chooseATask = "emailWrite",
@@ -200,8 +207,9 @@ export async function getSuggestedReply(prompt, maxRetries = 6, apiParams = {}) 
       }
       const controller = new AbortController();
       lastController = controller;
-      // IMPORTANT: Do not set a per-request timeout. Some generations can take
-      // longer than 10–15s; we want to wait until the server responds.
+      // IMPORTANT: NO TIMEOUT - Let the plugin wait as long as needed for the bot to generate
+      // This is especially important for long emails (5000+ words) that can take 30+ seconds
+      // We want to wait until the server responds, no matter how long it takes
 
       const response = await fetch(BOTATWORK_API_URL, {
         method: "POST",
@@ -215,6 +223,12 @@ export async function getSuggestedReply(prompt, maxRetries = 6, apiParams = {}) 
       // No timeout to clear since we allow long-running requests
       
       if (!response.ok) {
+        // For HTTP 5xx errors, treat them as retryable server errors
+        if (response.status >= 500 && response.status < 600) {
+          const error = new Error(`HTTP ${response.status}: ${response.statusText}`);
+          error.isServerError = true; // Mark as server error for retry logic
+          throw error;
+        }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
@@ -302,7 +316,20 @@ export async function getSuggestedReply(prompt, maxRetries = 6, apiParams = {}) 
         console.log(`Network error on attempt ${attempt}:`, e.message);
       }
       
-      // Check if this is a retryable error (includes network issues, timeouts, or transient HTTP 5xx)
+      // Always retry server errors (HTTP 5xx) as they are usually transient
+      if (e.isServerError || e.message.includes('500') || e.message.includes('502') || 
+          e.message.includes('503') || e.message.includes('504')) {
+        if (attempt < maxRetries) {
+          const backoffDelay = Math.pow(2, attempt - 1) * 1000 + Math.random() * 1000;
+          if (DEBUG_LOGS_ENABLED) {
+            console.log(`Server error detected, retrying in ${Math.round(backoffDelay)}ms... (attempt ${attempt}/${maxRetries})`);
+          }
+          await delay(backoffDelay);
+          continue;
+        }
+      }
+      
+      // Check if this is a retryable error (includes network issues, timeouts, or other transient errors)
       if (attempt < maxRetries && isRetryableError(e)) {
         const backoffDelay = Math.pow(2, attempt - 1) * 1000 + Math.random() * 1000;
         if (DEBUG_LOGS_ENABLED) {
