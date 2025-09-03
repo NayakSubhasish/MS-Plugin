@@ -397,14 +397,7 @@ const App = (props) => {
   React.useEffect(() => {
     const userEmail = getLoggedInUserEmail();
     setCurrentUserEmail(userEmail);
-    
-    // If user doesn't have access to editEmail tab and is currently on it, redirect to writeEmail
-    const hasEditAccess = userEmail === "champavathi.s@flatworldsolutions.com" || userEmail === "subhasish.n@flatworldsolutions.com";
-    if (!hasEditAccess && activeTab === "editEmail") {
-      setActiveTab("writeEmail");
-      setShowWriteEmailForm(true);
-    }
-  }, [currentUserEmail, activeTab]);
+  }, [currentUserEmail]);
 
   // Dynamic loading animation
   React.useEffect(() => {
@@ -1112,14 +1105,11 @@ Enhanced email:`;
                 </svg>
               </span>
             </Tab>
-            {/* Only show Edit Email tab for authorized users */}
-            {(currentUserEmail === "champavathi.s@flatworldsolutions.com" || currentUserEmail === "subhasish.n@flatworldsolutions.com") && (
-              <Tab value="editEmail" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }} title="Email Rewrite">
-                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <img src="assets/Rewrite email.png" alt="Rewrite email" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
-                </span>
-              </Tab>
-            )}
+            <Tab value="editEmail" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }} title="Email Rewrite">
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src="assets/Rewrite email.png" alt="Rewrite email" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
+              </span>
+            </Tab>
             <Tab value="suggestReply" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }} title="Suggest Reply">
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <img src="assets/Suggest reply icon.png" alt="Suggest reply" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
