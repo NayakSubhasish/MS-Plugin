@@ -365,12 +365,12 @@ const App = (props) => {
     description: "",
     additionalInstructions: "",
     tone: "formal",
-    pointOfView: "Organization perspective"
+    pointOfView: "Individual perspective"
   });
   const [editEmailForm, setEditEmailForm] = React.useState({
     additionalInstructions: "",
     tone: "formal",
-    pointOfView: "organizationPerspective"
+    pointOfView: "individualPerspective"
   });
 
   // const [isDarkMode, setIsDarkMode] = React.useState(false); // dark mode temporarily disabled
@@ -575,7 +575,7 @@ const App = (props) => {
         chooseATask: "emailResponse",
         emailContent: contextWithThread, // Pass the actual email content, not the formatted prompt
         tone: emailForm.tone.toLowerCase() || "formal",
-        pointOfView: emailForm.pointOfView === "Individual perspective" ? "individualPerspective" : "organizationPerspective",
+        pointOfView: emailForm.pointOfView === "Organization perspective" ? "organizationPerspective" : "individualPerspective",
         additionalInstructions: emailForm.additionalInstructions || ""
       };
       
@@ -779,7 +779,7 @@ Enhanced email:`;
         chooseATask: "emailWrite",
         description: enhancementPrompt,
         tone: emailForm.tone.toLowerCase() || "formal",
-        pointOfView: emailForm.pointOfView === "Individual perspective" ? "individualPerspective" : "organizationPerspective",
+        pointOfView: emailForm.pointOfView === "Organization perspective" ? "organizationPerspective" : "individualPerspective",
         additionalInstructions: ""
       };
       
@@ -856,7 +856,7 @@ Enhanced email:`;
         emailContent: emailContent,
         additionalInstructions: editEmailForm.additionalInstructions || "",
         tone: editEmailForm.tone.toLowerCase() || "formal",
-        pointOfView: editEmailForm.pointOfView || "organizationPerspective",
+        pointOfView: editEmailForm.pointOfView || "individualPerspective",
         anonymize: null,
         incognito: false,
         default_language: "en-US",
@@ -865,70 +865,21 @@ Enhanced email:`;
       
       const editedContent = await getSuggestedReply(emailContent, 2, apiParams);
       
-      // Update the email body in Outlook with the edited content
-      if (window.Office && Office.context && Office.context.mailbox && Office.context.mailbox.item) {
-        const item = Office.context.mailbox.item;
-        // If we're not in compose mode, setAsync won't be available. Show a friendly message instead of throwing.
-        if (!(item && item.body && typeof item.body.setAsync === 'function')) {
-          setGeneratedContent(`
-            <div style="color: #004578; font-weight: bold; margin-bottom: 12px;">ℹ️ Edit Email is only available while composing</div>
-            <div style="background: #f8f9fa; border: 1px solid #d1d1d1; padding: 12px; border-radius: 4px;">
-              This feature works when you are composing a new email or draft mode.
-            </div>
-          `);
-        } else {
-          // Convert markdown to proper HTML for Outlook formatting
-          const formattedContent = convertMarkdownToOutlookHtml(editedContent);
-
-          item.body.setAsync(
-            formattedContent,
-            { coercionType: Office.CoercionType.Html },
-            (result) => {
-              if (result.status === Office.AsyncResultStatus.Succeeded) {
-                setGeneratedContent(`
-                  <div style="color: #107c10; font-weight: bold; margin-bottom: 16px;">
-                    ✅ Email Edited Successfully!
-                  </div>
-                  <div style="background: #f3f9f1; border: 1px solid #107c10; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
-                    <div style="margin-bottom: 8px;"><strong>Email Subject:</strong> ${emailSubject}</div>
-                    <div>Your email has been updated with the edited content. Please review the changes in your email composer and send when ready.</div>
-                  </div>
-                  <div style="background: #f8f9fa; border: 1px solid #d1d1d1; padding: 12px; border-radius: 4px;">
-                    <strong>Edited Content Preview:</strong><br/>
-                    ${convertMarkdownToOutlookHtml(editedContent)}
-                  </div>
-                `);
-              } else {
-                setGeneratedContent("Failed to update email. Please copy the edited content manually.");
-              }
-            }
-          );
-        }
-      } else {
-        setGeneratedContent(`
-          <div style="color: #107c10; font-weight: bold; margin-bottom: 16px;">
-            ✅ Email Edited Successfully!
-          </div>
-          <div style="background: #f8f9fa; border: 1px solid #d1d1d1; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
-            <div style="margin-bottom: 8px;"><strong>Email Subject:</strong> ${emailSubject}</div>
-            <strong>Edited Content:</strong><br/>
-            ${convertMarkdownToOutlookHtml(editedContent)}
-          </div>
-          <div style="margin-top: 12px; color: #605e5c; font-size: 14px;">
-            Please copy this edited content to your email.
-          </div>
-        `);
-      }
+      // Show the edited content in the response box without overriding the user's draft
+      setGeneratedContent(`
+        <div style="background: #f8f9fa; border: 1px solid #d1d1d1; padding: 6px; border-radius: 4px; margin-bottom: 16px;">
+          <strong>Rewritten Email Content:</strong><br/>
+          ${convertMarkdownToOutlookHtml(editedContent)}
+        </div>
+        <div style="background: #fff4ce; border: 1px solid #ffb900; padding: 12px; border-radius: 4px;">
+          <strong>💡 How to use this:</strong><br/>
+          • Copy the rewritten content above and paste it into your email if you like it<br/>
+          • Or use it as inspiration to improve your original draft<br/>
+          • Your original draft remains safe and unchanged
+        </div>
+      `);
     } catch (error) {
-      const message = (error && typeof error.message === 'string' && error.message.includes('setAsync'))
-        ? `
-          <div style="color: #004578; font-weight: bold; margin-bottom: 12px;">ℹ️ Edit Email is only available while composing</div>
-          <div style="background: #f8f9fa; border: 1px solid #d1d1d1; padding: 12px; border-radius: 4px;">
-            This feature works when you are composing a new email or draft mode.
-          </div>
-        `
-        : `Error editing email: ${error.message}`;
-      setGeneratedContent(message);
+      setGeneratedContent(`Error rewriting email: ${error.message}`);
     }
     
     setLoading(false);
@@ -973,7 +924,7 @@ Enhanced email:`;
         chooseATask: "chat",
         description: contextualPrompt,
         tone: emailForm.tone.toLowerCase() || "formal",
-        pointOfView: emailForm.pointOfView === "Individual perspective" ? "individualPerspective" : "organizationPerspective",
+        pointOfView: emailForm.pointOfView === "Organization perspective" ? "organizationPerspective" : "individualPerspective",
         additionalInstructions: "Provide a helpful and conversational response to the user's question or request."
       };
       
@@ -1052,7 +1003,7 @@ Enhanced email:`;
         chooseATask: "emailWrite",
         description: prompt,
         tone: emailForm.tone.toLowerCase() || "formal",
-        pointOfView: emailForm.pointOfView === "Individual perspective" ? "individualPerspective" : "organizationPerspective",
+        pointOfView: emailForm.pointOfView === "Organization perspective" ? "organizationPerspective" : "individualPerspective",
         additionalInstructions: ""
       };
       
@@ -1105,7 +1056,7 @@ Enhanced email:`;
                 </svg>
               </span>
             </Tab>
-            <Tab value="editEmail" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }} title="Email Rewrite">
+            <Tab value="editEmail" style={{ flex: '1 1 0', fontSize: '12px', padding: '8px 4px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }} title="Rewrite Email">
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <img src="assets/Rewrite email.png" alt="Rewrite email" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
               </span>
@@ -1256,8 +1207,8 @@ Enhanced email:`;
                 onFocus={(e) => e.target.style.borderColor = '#0078d4'}
                 onBlur={(e) => e.target.style.borderColor = '#d1d1d1'}
               >
-                <option value="Organization perspective">Organization perspective</option>
                 <option value="Individual perspective">Individual perspective</option>
+                <option value="Organization perspective">Organization perspective</option>
               </select>
               </div>
             </div>
@@ -1372,8 +1323,8 @@ Enhanced email:`;
                   onFocus={(e) => e.target.style.borderColor = '#0078d4'}
                   onBlur={(e) => e.target.style.borderColor = '#d1d1d1'}
               >
-                <option value="Organization perspective">Organization perspective</option>
                 <option value="Individual perspective">Individual perspective</option>
+                <option value="Organization perspective">Organization perspective</option>
               </select>
               </div>
             </div>
@@ -1551,8 +1502,8 @@ Enhanced email:`;
                   onFocus={(e) => e.target.style.borderColor = '#0078d4'}
                   onBlur={(e) => e.target.style.borderColor = '#d1d1d1'}
                 >
-                  <option value="organizationPerspective">Organization perspective</option>
                   <option value="individualPerspective">Individual perspective</option>
+                  <option value="organizationPerspective">Organization perspective</option>
                 </select>
               </div>
             </div>

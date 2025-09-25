@@ -1,5 +1,5 @@
 import * as React from "react";
-import { makeStyles, tokens } from "@fluentui/react-components";
+import  { makeStyles, tokens } from "@fluentui/react-components";
 import {
   Button,
   Dialog,
@@ -16,7 +16,8 @@ import {
   Tab,
   TabList,
   TabValue,
-} from "@fluentui/react-components";
+} 
+from "@fluentui/react-components";
 
 const useStyles = makeStyles({
   root: {
@@ -149,5 +150,4 @@ const PromptConfig = ({ onSavePrompts }) => {
     </Dialog>
   );
 };
-
 export default PromptConfig; 
