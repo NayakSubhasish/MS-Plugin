@@ -1142,6 +1142,8 @@ Enhanced email:`;
               />
             </div> */}
             
+            {/* Tone and Point of View section - Hidden as per user request */}
+            {/* 
             <div style={{ 
               display: 'flex', 
               gap: '8px', 
@@ -1212,6 +1214,7 @@ Enhanced email:`;
               </select>
               </div>
             </div>
+            */}
             
             <Button
               appearance={emailForm.description.trim() ? "primary" : "secondary"}
@@ -1256,6 +1259,8 @@ Enhanced email:`;
             borderRadius: '8px',
             marginBottom: '8px'
           }}>
+            {/* Tone and Point of View section - Hidden as per user request */}
+            {/* 
             <div style={{ 
               display: 'flex', 
               gap: '8px', 
@@ -1328,6 +1333,7 @@ Enhanced email:`;
               </select>
               </div>
             </div>
+            */}
             
             {/* Additional Instructions section */}
             <div style={{ marginBottom: '10px' }}>
@@ -1437,6 +1443,8 @@ Enhanced email:`;
               />
             </div>
             
+            {/* Tone and Point of View section - Hidden as per user request */}
+            {/* 
             <div style={{ 
               display: 'flex', 
               gap: '8px', 
@@ -1507,6 +1515,7 @@ Enhanced email:`;
                 </select>
               </div>
             </div>
+            */}
             
             <Button
               appearance="primary"

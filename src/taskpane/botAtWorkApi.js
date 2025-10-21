@@ -95,9 +95,11 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
       chooseATask: "emailWrite",
       description: clampText(descriptionMatch ? descriptionMatch[1].trim() : (apiDescription != null ? apiDescription : cleanPrompt)),
       //additionalInstructions: additionalInstructions || "Write a professional email that matches the specified tone and perspective exactly. Use 'we', 'our', 'us' for organization perspective and 'I', 'my', 'me' for individual perspective.",
-      tone: tone, // Always use the dynamic tone parameter
-      pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective", // Map to API expected values
-      hiddenValue: hiddenValue
+     // tone: tone, // Always use the dynamic tone parameter
+     // pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective", // Map to API expected values
+      hiddenValue: hiddenValue,
+      "run_on_behalf": userEmail,
+      "emailPreferencePrompt": true
     };
   }
 
@@ -107,9 +109,11 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
       chooseATask: "emailResponse",
       emailContent: clampText(apiEmailContent != null ? apiEmailContent : cleanPrompt),
       additionalInstructions: additionalInstructions || "",
-      tone,
-      pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective",
-      hiddenValue: hiddenValue
+     // tone,
+     // pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective",
+      hiddenValue: hiddenValue,
+      "run_on_behalf": userEmail,
+      "emailPreferencePrompt": true
     };
   }
 
@@ -119,9 +123,11 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
       chooseATask: "emailRewrite",
       emailContent: clampText(apiEmailContent != null ? apiEmailContent : cleanPrompt),
       additionalInstructions: additionalInstructions || "",
-      tone,
-      pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective",
-      hiddenValue: hiddenValue
+     // tone,
+     // pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective",
+      hiddenValue: hiddenValue,
+      "run_on_behalf": userEmail,
+      "emailPreferencePrompt": true
     };
   }
 
@@ -131,9 +137,11 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
       chooseATask: "emailWrite", // Use emailWrite for chat as it's more flexible
       description: clampText(cleanPrompt),
      // additionalInstructions: additionalInstructions || "Provide a helpful and conversational response. Use 'we', 'our', 'us' for organization perspective and 'I', 'my', 'me' for individual perspective.",
-      tone,
-      pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective",
-      hiddenValue: hiddenValue
+     // tone,
+     // pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective",
+      hiddenValue: hiddenValue,
+      "run_on_behalf": userEmail,
+      "emailPreferencePrompt": true
     };
   }
 
@@ -142,9 +150,11 @@ const formatPayload = (prompt, taskType = 'emailWrite', apiParams = {}) => {
     chooseATask: "emailWrite",
     description: clampText(apiDescription != null ? apiDescription : cleanPrompt),
    // additionalInstructions: additionalInstructions || "Write a professional email that matches the specified tone and perspective. Use 'we', 'our', 'us' for organization perspective and 'I', 'my', 'me' for individual perspective.",
-    tone,
-    pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective",
-    hiddenValue: hiddenValue
+   // tone,
+    //pointOfView: pointOfView === "individualPerspective" ? "individualPerspective" : "organizationPerspective",
+    hiddenValue: hiddenValue,
+    "run_on_behalf": userEmail,
+    "emailPreferencePrompt": true
   };
 };
 
@@ -163,6 +173,9 @@ export async function getSuggestedReply(prompt, maxRetries = 10, apiParams = {})
     should_stream = false
   } = apiParams;
 
+  // Get logged-in user's email for run_on_behalf
+  const userEmail = getLoggedInUserEmail();
+
   // Create payload based on task type using formatPayload
   const payload = formatPayload(clampText(prompt), chooseATask, apiParams);
   
@@ -173,7 +186,9 @@ export async function getSuggestedReply(prompt, maxRetries = 10, apiParams = {})
     anonymize,
     incognito,
     default_language,
-    should_stream
+    should_stream,
+    "run_on_behalf": userEmail,
+    "emailPreferencePrompt": true
   };
 
   // Return cached response if available
